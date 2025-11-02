@@ -5,6 +5,22 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Chiller Dashboard</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="CAREL Chiller Control Dashboard - Monitor and control your chiller system">
+  <meta name="theme-color" content="#007bff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Chiller Dashboard">
+  <meta name="msapplication-TileColor" content="#007bff">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="fanap.png">
+  <link rel="apple-touch-icon" href="fanap.png">
+  
   <link rel="stylesheet" href="css/bootstrap.min.css" />
   <link rel="stylesheet" href="css/base-page.css" />
   <style>
@@ -793,6 +809,58 @@
           });
       } catch(e){}
     })();
+  </script>
+  
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            
+            // Check for updates
+            registration.addEventListener('updatefound', function() {
+              const newWorker = registration.installing;
+              newWorker.addEventListener('statechange', function() {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New content is available, show update notification
+                  if (confirm('New version available! Reload to update?')) {
+                    window.location.reload();
+                  }
+                }
+              });
+            });
+          })
+          .catch(function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+      });
+    }
+    
+    // PWA Install Prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      // Show install button or notification
+      const installBtn = document.createElement('button');
+      installBtn.textContent = 'Install App';
+      installBtn.className = 'btn btn-primary btn-sm';
+      installBtn.style.cssText = 'position:fixed;top:10px;right:10px;z-index:9999;';
+      installBtn.addEventListener('click', function() {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(choiceResult) {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+          }
+          deferredPrompt = null;
+          installBtn.remove();
+        });
+      });
+      document.body.appendChild(installBtn);
+    });
   </script>
 </body>
 </html>
