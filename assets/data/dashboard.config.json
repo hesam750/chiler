@@ -1,6 +1,6 @@
 {
-  "deviceUrl": "https://rap-dis-committed-preview.trycloudflare.com/pgd/getvar.csv",
-  "pollingMs": 1000,
+  "deviceUrl": "https://columnists-omaha-channels-slide.trycloudflare.com/pgd/getvar.csv",
+  "pollingMs": 3000,
   "units": [
     {
       "name": "Chiller-1",

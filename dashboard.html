@@ -65,6 +65,7 @@
     /* Grille: radial spokes */
     .fan::after { content:""; position:absolute; inset: 6px; border-radius:50%; pointer-events:none; opacity:.35; background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.08) 0 8deg, transparent 8deg 22deg); -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0 34%, black 34% 100%); mask-image: radial-gradient(circle at 50% 50%, transparent 0 34%, black 34% 100%); }
     @keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
+    @media (prefers-reduced-motion: reduce) { .fan .blade { animation: none !important; } }
   
     .controls { display:grid; grid-template-columns: 1fr; gap:10px; }
     .control { background:#101620; border:1px solid #243040; border-radius:10px; padding:10px; }
@@ -112,6 +113,11 @@
 
   <div style="padding:8px 16px 0">
     <div class="alert alert-danger" style="display:none" data-bind="visible: lastError, text: lastError"></div>
+  </div>
+
+  <div style="padding:8px 16px;">
+    <button id="btn-open-pgd" class="btn btn-primary btn-sm">Open Virtual Display</button>
+    <span id="cpco-version" class="muted" style="margin-left:8px;">Loading info...</span>
   </div>
 
   <div class="cards" data-bind="foreach: units">
@@ -285,30 +291,32 @@
 
       function VarsAdapter(baseUrl){
         var deviceUrl = baseUrl || 'http://169.254.61.68/getvar.csv';
-        var TTL = 400; var inflight = null, inflightAt = 0; var lastText = '', lastTime = 0, lastMap = null;
+        var TTL = 1000; var inflight = null, inflightAt = 0; var lastText = '', lastTime = 0, lastMap = null;
         function fetchOnce(url){
           var proxied = '/proxy?url=' + encodeURIComponent(url);
           var ctrl = (window.AbortController ? new AbortController() : null);
-          var timeoutId = null;
-          if(ctrl){ timeoutId = setTimeout(function(){ try{ ctrl.abort(); }catch(e){} }, 5000); }
-          return fetch(proxied, { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined }).then(function(r){
-            if(!r.ok) throw new Error('HTTP ' + r.status);
-            return r.text();
-          }).finally(function(){ if(timeoutId) try{ clearTimeout(timeoutId); }catch(e){} });
+          var timeoutId = null, timedOut = false;
+          if(ctrl){ timeoutId = setTimeout(function(){ timedOut = true; try{ ctrl.abort(); }catch(e){} }, 12000); }
+          return fetch(proxied, { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+            .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+            .catch(function(err){ if(timedOut && err && err.name === 'AbortError'){ throw new Error('Timeout contacting device'); } throw err; })
+            .finally(function(){ if(timeoutId) try{ clearTimeout(timeoutId); }catch(e){} });
         }
 
         // Extended fetch that supports GET and POST through the same proxy
         function fetchOnceExt(method, url, body){
           var proxied = '/proxy?url=' + encodeURIComponent(url);
           var ctrl = (window.AbortController ? new AbortController() : null);
-          var timeoutId = null;
+          var timeoutId = null, timedOut = false;
           var opts = { method: (method||'GET'), cache: 'no-store', signal: ctrl ? ctrl.signal : undefined, headers: {} };
           if(String(opts.method).toUpperCase() === 'POST'){
             opts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
             opts.body = String(body||'');
           }
-          if(ctrl){ timeoutId = setTimeout(function(){ try{ ctrl.abort(); }catch(e){} }, 6000); }
-          return fetch(proxied, opts).then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+          if(ctrl){ timeoutId = setTimeout(function(){ timedOut = true; try{ ctrl.abort(); }catch(e){} }, 15000); }
+          return fetch(proxied, opts)
+            .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+            .catch(function(err){ if(timedOut && err && err.name === 'AbortError'){ throw new Error('Timeout contacting device'); } throw err; })
             .finally(function(){ if(timeoutId) try{ clearTimeout(timeoutId); }catch(e){} });
         }
         function fetchVars(force){
@@ -346,16 +354,33 @@
           return inflight;
         }
         function buildIndex(rows){ var idx = {}; rows.forEach(function(r){ idx[r.name] = r.value; }); return idx; }
+        function readOneDirect(name){
+          try {
+            if(/getvar\.csv/i.test(deviceUrl)){
+              var base = deviceUrl.replace(/([?&].*)$/,'');
+              var u = base + '?id=' + encodeURIComponent(name);
+              return fetchOnce(u).then(function(txt){
+                var rows = parseResponse(txt) || []; var v = null;
+                if(rows && rows.length){
+                  var r = rows.find(function(x){ return String(x.name).trim()===String(name).trim(); }) || rows[0];
+                  v = r && r.value;
+                }
+                return v;
+              });
+            }
+          } catch(e){}
+          return fetchVars().then(function(txt){ var rows = parseResponse(txt)||[]; var m = buildIndex(rows); return m[name]; });
+        }
         return {
           read: function(key){
-            return fetchVars().then(function(txt){
-              if(txt === lastText && lastMap){ return lastMap[key]; }
-              var rows = parseResponse(txt) || [];
-              lastMap = buildIndex(rows);
-              return lastMap[key];
-            });
+            return readOneDirect(key);
           },
           batchRead: function(keys){
+            // For small sets of keys, prefer direct reads to avoid downloading full CSV
+            if(/getvar\.csv/i.test(deviceUrl) && keys && keys.length && keys.length <= 8){
+              var out = {}; return Promise.all(keys.map(function(k){ return readOneDirect(k).then(function(v){ out[k]=v; }); }))
+                .then(function(){ return out; });
+            }
             return fetchVars().then(function(txt){
               if(txt === lastText && lastMap){ var outCached = {}; keys.forEach(function(k){ outCached[k] = lastMap[k]; }); return outCached; }
               var rows = parseResponse(txt) || []; lastMap = buildIndex(rows); var out = {}; keys.forEach(function(k){ out[k] = lastMap[k]; }); return out;
@@ -675,7 +700,10 @@
         var timer = null, ticking = false, consecutiveFails = 0;
         self.startPolling = function(){
           if(timer) { clearTimeout(timer); timer = null; }
+          var isPaused = false;
+          try { document.addEventListener('visibilitychange', function(){ isPaused = document.hidden; }); } catch(e){}
           function tick(){
+            if(isPaused){ timer = setTimeout(tick, Math.max(self.pollingMs*3, 3000)); return; }
             if(ticking){ timer = setTimeout(tick, self.pollingMs); return; }
             ticking = true;
             // Simple connectivity probe: read once to build cache even if no units vars defined
@@ -741,6 +769,29 @@
           }
         } catch(_){}
       }
+    })();
+  </script>
+  <script>
+    (function(){
+      try {
+        var btn = document.getElementById('btn-open-pgd');
+        if(btn){
+          btn.addEventListener('click', function(){
+            window.open('https://columnists-omaha-channels-slide.trycloudflare.com/pgd/index.htm','_blank');
+          });
+        }
+        var span = document.getElementById('cpco-version');
+        fetch('/proxy?url=https://columnists-omaha-channels-slide.trycloudflare.com/')
+          .then(function(r){ return r.text(); })
+          .then(function(t){
+            var m = t.match(/C\.pCO\s+Webkit\s+version\s*([^\s<]+)/i);
+            var info = m ? ('Webkit ' + m[1]) : (t.replace(/\s+/g,' ').trim().slice(0,80));
+            if(span){ span.textContent = info; }
+          })
+          .catch(function(err){
+            if(span){ span.textContent = 'Info unavailable'; }
+          });
+      } catch(e){}
     })();
   </script>
 </body>
