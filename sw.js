@@ -92,7 +92,7 @@ self.addEventListener('sync', event => {
 
 function doBackgroundSync() {
   // Sync data when connection is restored
-  return fetch('/api/proxy?url=' + encodeURIComponent('https://warnings-jimmy-control-calibration.trycloudflare.com/pgd/getvar.csv'))
+  return fetch('/api/proxy?url=' + encodeURIComponent('https://assist-nutrition-disabled-architects.trycloudflare.com/pgd/getvar.csv'))
     .then(response => response.text())
     .then(data => {
       // Store updated data in cache
