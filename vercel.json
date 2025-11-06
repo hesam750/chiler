@@ -9,6 +9,20 @@
       "destination": "/api/proxy"
     }
   ],
+  "headers": [
+    {
+      "source": "/dashboard.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "max-age=0, s-maxage=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/assets/data/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "max-age=0, s-maxage=0, must-revalidate" }
+      ]
+    }
+  ],
   "cleanUrls": true,
   "trailingSlash": false
 }

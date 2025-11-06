@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chiller-dashboard-v1';
+const CACHE_NAME = 'chiller-dashboard-v3';
 const urlsToCache = [
   '/dashboard.html',
   '/css/bootstrap.min.css',
@@ -17,6 +17,8 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', event => {
+  // Activate new SW immediately
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -81,6 +83,8 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  // Take control of all clients right away
+  self.clients.claim();
 });
 
 // Background sync for data updates
