@@ -25,10 +25,12 @@
   <link rel="stylesheet" href="css/base-page.css" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://cdn.fontcdn.ir" crossorigin>
+  <link rel="stylesheet" href="https://cdn.fontcdn.ir/Font/Persian/IRANSansX/IRANSansX.css">
   <link rel="stylesheet" href="css/theme.css" />
   <link rel="stylesheet" href="css/rtl.css" />
   <style>
-    body { background: #0f141a; color: #e6edf3; }
+    body { background: #0f141a; color: #e6edf3; font-family: 'IRANSansX', 'Vazirmatn', Tahoma, Arial, sans-serif; }
     :root { --fanSize: clamp(120px, 12vw, 180px); --gap: 12px; }
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#111822; border-bottom:1px solid #243040; }
     .brand { display:flex; align-items:center; gap:10px; }
@@ -41,7 +43,7 @@
     .top-actions { display:flex; align-items:center; gap:12px; }
     .top-actions .meta { display:flex; align-items:center; gap:8px; }
     .muted { color:#8b949e; font-size:12px; }
-    .device-url { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#8b949e; font-size:12px; }
+    .device-url { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color: var(--muted); font-size:12px; }
     
     /* Desktop polish */
      .cards { display:grid; grid-template-columns: repeat(5, minmax(220px, 1fr)); gap: 14px; padding: 14px; }
@@ -52,7 +54,7 @@
      .card.card--empty .card-header { opacity:.65; }
      .card.card--empty .card-body { display:flex; align-items:center; justify-content:center; }
      .card.card--empty .empty-slot { width:60%; height:60%; border-radius:12px; background:rgba(255,255,255,.04); border:1px dashed #2b3647; }
-     .card-header { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid #243040; }
+     .card-header { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid var(--card-border); }
      /* Always single-column body to avoid overflow: fan on top, controls below */
      .card-body { padding:12px; display:grid; grid-template-columns: 1fr; gap:12px; align-items:center; }
      
@@ -92,8 +94,8 @@
     @media (prefers-reduced-motion: reduce) { .fan .blade { animation: none !important; } }
   
     .controls { display:grid; grid-template-columns: 1fr; gap:10px; }
-    .control { background:#101620; border:1px solid #243040; border-radius:10px; padding:10px; }
-    .control h6 { margin:0 0 8px; color:#c9d1d9; font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
+    .control { background: var(--panel-bg); border:1px solid var(--panel-border); border-radius:10px; padding:10px; }
+    .control h6 { margin:0 0 8px; color: var(--heading); font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
   
     .toggle { display:flex; align-items:center; gap:10px; }
     .toggle input { width:44px; height:22px; }
@@ -119,6 +121,51 @@
       .fan { margin: 8px auto 12px; }
       .controls { grid-template-columns: 1fr; }
     }
+    /* Theme: Dark/Light with Orange accent and Navy (improved contrast) */
+    :root[data-theme='dark'] {
+      --bg: #0f141a;
+      --text: #e6edf3;
+      --topbar-bg: #0e1728; /* navy-tinted */
+      --topbar-border: #243040;
+      --topbar-text: #e6edf3;
+      --card-bg: #141b24;
+      --card-border: #243040;
+      --panel-bg: #101620;
+      --panel-border: #243040;
+      --heading: #c9d1d9;
+      --muted: #8b949e;
+      --accent: #ff8c1a; /* orange */
+      --accent-contrast: #ffffff;
+    }
+    :root[data-theme='light'] {
+      --bg: #ffffff;
+      --text: #0f172a; /* readable navy */
+      --topbar-bg: #ffffff; /* clean top bar */
+      --topbar-border: #e5e7eb;
+      --topbar-text: #0f172a; /* dark text on light bar */
+      --card-bg: #ffffff;
+      --card-border: #e5e9f2;
+      --panel-bg: #f9fafb;
+      --panel-border: #e5e7eb;
+      --heading: #0f172a;
+      --muted: #64748b;
+      --accent: #f97316; /* orange-500 */
+      --accent-contrast: #ffffff;
+    }
+    body { background: var(--bg); color: var(--text); }
+    .topbar { background: var(--topbar-bg); border-bottom: 1px solid var(--topbar-border); color: var(--topbar-text); }
+    .muted { color: var(--muted); }
+    .card { background: var(--card-bg); border-color: var(--card-border); color: var(--text); }
+    [data-theme='light'] .card.card--empty { background: #f8f9fb; border-color: #dde3ee; }
+    [data-theme='dark'] .card.card--empty { background: #101620; border-color: #2b3647; }
+    .btn-primary, .btn-theme { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+    .btn-primary:hover, .btn-theme:hover { filter: brightness(1.05); }
+    /* Component readability overrides using theme tokens */
+    input[type="range"], input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
+    .btn-step { border:1px solid var(--panel-border); background: var(--panel-bg); color: var(--text); }
+    .btn-step:hover { filter: brightness(0.95); }
+    .value-big { color: var(--heading); }
+    .control { color: var(--text); }
   </style>
 </head>
 <body>
@@ -128,10 +175,15 @@
       <img src="fanap.png" alt="Fanap Logo" />
       <strong>داشبورد چیلر</strong>
     </div>
-    <div class="meta" style="display:flex;align-items:center;gap:8px;">
-      <span class="muted">وضعیت:</span>
-      <span class="status-dot" data-bind="css: connectionClass"></span>
-      <span data-bind="text: connectionText"></span>
+    <div class="top-actions">
+      <div class="meta" style="display:flex;align-items:center;gap:8px;">
+        <span class="muted">وضعیت:</span>
+        <span class="status-dot" data-bind="css: connectionClass"></span>
+        <span data-bind="text: connectionText"></span>
+      </div>
+      <button id="theme-toggle" class="btn btn-sm btn-theme" type="button" title="تغییر تم">
+        تم: <span id="theme-label">تاریک</span>
+      </button>
     </div>
   </div>
 
@@ -836,16 +888,33 @@
         } catch(e){ window.DEMO_MODE = false; }
         ko.applyBindings(vm);
         vm.load().then(function(){ vm.startPolling();
-        // Only auto-turn on in demo mode
+        // Demo mode: always seed visual states when ?demo=1 (regardless of connectivity)
         if(window.DEMO_MODE){
           setTimeout(function(){
             try {
-              if(!vm.isConnected() && vm.units() && vm.units().length){
-                var u = vm.units()[0];
-                u.powerCmd(true);
-                u.powerFb(true);
-                u.fanSpeedFb(900);
-                console.warn('[Dashboard] Demo mode: Auto ON Chiller-1 (no connection)');
+              if(vm.units() && vm.units().length){
+                vm.units().forEach(function(u, i){
+                  if(i === 0){
+                    // Green: running
+                    u.powerCmd(true);
+                    u.powerFb(true);
+                    u.alarmActive(false);
+                    u.fanSpeedFb(900);
+                  } else if(i === 1){
+                    // Yellow: maintenance (use alarm flag for demo)
+                    u.powerCmd(false);
+                    u.powerFb(false);
+                    u.alarmActive(true);
+                    u.fanSpeedFb(0);
+                  } else {
+                    // Red: stopped
+                    u.powerCmd(false);
+                    u.powerFb(false);
+                    u.alarmActive(false);
+                    u.fanSpeedFb(0);
+                  }
+                });
+                console.warn('[Dashboard] Demo mode: states seeded regardless of connection (0 green, 1 yellow maintenance, others red stopped)');
               }
             } catch(e){}
           }, 800);
@@ -861,6 +930,33 @@
             alertEl.textContent = 'Init error: ' + ((e && e.message) ? e.message : String(e));
           }
         } catch(_){}
+      }
+    })();
+  </script>
+  <script>
+    // Theme toggle with persistence
+    (function(){
+      var root = document.documentElement;
+      function applyTheme(t){
+        try { root.setAttribute('data-theme', t); } catch(e){}
+        var label = document.getElementById('theme-label');
+        if(label){ label.textContent = (t === 'dark') ? 'تاریک' : 'روشن'; }
+      }
+      var saved = null;
+      try { saved = localStorage.getItem('dashboard-theme'); } catch(e){ saved = null; }
+      if(!saved){
+        try { saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; }
+        catch(e){ saved = 'dark'; }
+      }
+      applyTheme(saved);
+      try { localStorage.setItem('dashboard-theme', saved); } catch(e){}
+      var btn = document.getElementById('theme-toggle');
+      if(btn){
+        btn.addEventListener('click', function(){
+          var next = (root.getAttribute('data-theme') === 'dark') ? 'light' : 'dark';
+          applyTheme(next);
+          try { localStorage.setItem('dashboard-theme', next); } catch(e){}
+        });
       }
     })();
   </script>
@@ -938,6 +1034,29 @@
       });
       document.body.appendChild(installBtn);
     });
+  </script>
+  <!-- Dev-only: Fresh reload clears caches and unregisters ServiceWorker when ?fresh=1 -->
+  <script>
+    (function(){
+      try {
+        var fresh = /[?&](fresh|nocache)=1/i.test(location.search || '');
+        if(!fresh){ return; }
+        try { localStorage.removeItem('dashboard-theme'); } catch(e){}
+        var reloadClean = function(){
+          var url = location.pathname + '?demo=1&v=' + Date.now();
+          window.location.replace(url);
+        };
+        if('serviceWorker' in navigator){
+          navigator.serviceWorker.getRegistrations()
+            .then(function(regs){ return Promise.all(regs.map(function(r){ return r.unregister(); })); })
+            .then(function(){ return caches.keys(); })
+            .then(function(keys){ return Promise.all(keys.map(function(k){ return caches.delete(k); })); })
+            .finally(reloadClean);
+        } else {
+          reloadClean();
+        }
+      } catch(e){ console.warn('fresh-mode error', e); }
+    })();
   </script>
 </body>
 </html>
