@@ -3,7 +3,7 @@
   "pollingMs": 3000,
   "units": [
     {
-      "name": "Chiller-1",
+      "name": "رول کاعد",
       "vars": {
         "PowerCmd": "SystemStatus.Ctrl",
         "PowerFb": "SystemStatus.Ctrl",

@@ -23,10 +23,13 @@
   
   <link rel="stylesheet" href="css/bootstrap.min.css" />
   <link rel="stylesheet" href="css/base-page.css" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css" />
   <link rel="stylesheet" href="css/rtl.css" />
   <style>
     body { background: #0f141a; color: #e6edf3; }
-    :root { --fanSize: clamp(80px, 10vw, 120px); --gap: 12px; }
+    :root { --fanSize: clamp(120px, 12vw, 180px); --gap: 12px; }
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#111822; border-bottom:1px solid #243040; }
     .brand { display:flex; align-items:center; gap:10px; }
     .brand img { height:26px; }
@@ -42,7 +45,13 @@
     
     /* Desktop polish */
      .cards { display:grid; grid-template-columns: repeat(5, minmax(220px, 1fr)); gap: 14px; padding: 14px; }
-     .card { background:#141b24; border:1px solid #243040; border-radius:12px; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,.35); min-height: 240px; }
+     .card { background:#141b24; border:1px solid #243040; border-radius:12px; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,.35); min-height: 240px; position:relative; }
+     .card.card--empty { background:#101620; border:1px dashed #2b3647; }
+     .card.card--disabled { opacity:.88; filter: grayscale(.2); }
+     .card.card--disabled .control *, .card.card--disabled .btn, .card.card--disabled input { cursor: not-allowed; }
+     .card.card--empty .card-header { opacity:.65; }
+     .card.card--empty .card-body { display:flex; align-items:center; justify-content:center; }
+     .card.card--empty .empty-slot { width:60%; height:60%; border-radius:12px; background:rgba(255,255,255,.04); border:1px dashed #2b3647; }
      .card-header { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid #243040; }
      /* Always single-column body to avoid overflow: fan on top, controls below */
      .card-body { padding:12px; display:grid; grid-template-columns: 1fr; gap:12px; align-items:center; }
@@ -60,19 +69,17 @@
      
      /* On small screens keep one column for controls as well */
      @media (max-width: 768px) { .controls { grid-template-columns: 1fr; } }
-     .card-body { padding:14px; display:grid; grid-template-columns: auto 1fr; gap:14px; align-items:center; }
+     .card-body { padding:14px; display:grid; grid-template-columns: 1fr; gap:14px; align-items:center; }
   
     /* Cooler motor look: casing + grille + state glow */
     .fan { position:relative; width: var(--fanSize); height: var(--fanSize); border-radius:50%; background: radial-gradient(60% 60% at 50% 50%, #0c121a, #09111a 60%, #071018 100%); border:1px solid #233042; box-shadow: inset 0 0 12px rgba(0,0,0,.6), 0 8px 18px rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; margin:auto; }
-    .fan svg { width: calc(var(--fanSize) - 24px); height: calc(var(--fanSize) - 24px); }
-    .fan .blade { transform-origin:50% 50%; animation: spin linear infinite; }
+    .fan svg { width: calc(var(--fanSize) - 16px); height: calc(var(--fanSize) - 16px); }
+    .fan .blade { transform-origin:50% 50%; animation: spin linear infinite; will-change: transform, filter; }
     .fan.stopped .blade { animation-play-state: paused; }
     .fan.running svg { filter: drop-shadow(0 0 12px rgba(46,204,113,.45)); }
     .fan.alarm svg { filter: drop-shadow(0 0 12px rgba(241,196,15,.45)); }
     .fan.stopped svg { filter: drop-shadow(0 0 10px rgba(231,76,60,.35)); }
-    .fan.running .blade path { fill:#2ecc71; }
-    .fan.alarm .blade path { fill:#f1c40f; }
-    .fan.stopped .blade path { fill:#e74c3c; }
+    /* Keep blade gradient coloring; state indicated via glow only */
     /* Ambient status glow on casing */
     .fan.running { box-shadow: inset 0 0 12px rgba(0,0,0,.6), 0 8px 18px rgba(0,0,0,.4), 0 0 0 2px rgba(46,204,113,.25), 0 0 26px rgba(46,204,113,.22); }
     .fan.alarm { box-shadow: inset 0 0 12px rgba(0,0,0,.6), 0 8px 18px rgba(0,0,0,.4), 0 0 0 2px rgba(241,196,15,.25), 0 0 26px rgba(241,196,15,.22); }
@@ -138,7 +145,7 @@
   </div>
 
   <div class="cards" data-bind="foreach: units">
-    <div class="card" data-bind="css: { running: powerFb(), alarm: alarmActive(), stopped: !powerFb() && !alarmActive() }">
+      <div class="card" data-bind="css: { running: powerFb(), alarm: alarmActive(), stopped: !powerFb() && !alarmActive(), 'card--disabled': isDisabled }">
       <div class="card-header">
         <div>
           <strong data-bind="text: name"></strong>
@@ -149,17 +156,67 @@
       </div>
       <div class="card-body">
         <div class="fan" data-bind="css: { running: powerFb(), alarm: alarmActive(), stopped: !powerFb() && !alarmActive() }">
-          <!-- 5-blade inline SVG fan; speed controlled by animation-duration -->
+          <!-- Realistic 6-blade fan with metal gradients, shroud, and bolts -->
           <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="60" cy="60" r="56" fill="#0b1119" stroke="#1f2a38" stroke-width="4" />
-            <g class="blade" data-bind="style: { animationDuration: fanAnimDuration }">
-              <path d="M60 18 C70 26, 76 34, 78 44 C80 56, 68 60, 60 60 C52 60, 40 56, 42 44 C44 34, 50 26, 60 18" />
-              <path d="M60 18 C70 26, 76 34, 78 44 C80 56, 68 60, 60 60 C52 60, 40 56, 42 44 C44 34, 50 26, 60 18" transform="rotate(72 60 60)" />
-              <path d="M60 18 C70 26, 76 34, 78 44 C80 56, 68 60, 60 60 C52 60, 40 56, 42 44 C44 34, 50 26, 60 18" transform="rotate(144 60 60)" />
-              <path d="M60 18 C70 26, 76 34, 78 44 C80 56, 68 60, 60 60 C52 60, 40 56, 42 44 C44 34, 50 26, 60 18" transform="rotate(216 60 60)" />
-              <path d="M60 18 C70 26, 76 34, 78 44 C80 56, 68 60, 60 60 C52 60, 40 56, 42 44 C44 34, 50 26, 60 18" transform="rotate(288 60 60)" />
+            <defs>
+              <!-- Metal finish for blades -->
+              <linearGradient id="bladeMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#cfd5db" />
+                <stop offset="40%" stop-color="#9aa2aa" />
+                <stop offset="60%" stop-color="#858c94" />
+                <stop offset="100%" stop-color="#d6dbe0" />
+              </linearGradient>
+              <!-- Edge highlight to suggest thickness -->
+              <linearGradient id="edgeHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25" />
+                <stop offset="30%" stop-color="#ffffff" stop-opacity="0.05" />
+                <stop offset="100%" stop-color="#000000" stop-opacity="0.08" />
+              </linearGradient>
+              <!-- Hub metal -->
+              <radialGradient id="hubMetal" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#e7eaee" />
+                <stop offset="65%" stop-color="#c2c7ce" />
+                <stop offset="100%" stop-color="#9ba2aa" />
+              </radialGradient>
+              <!-- Shroud gradient -->
+              <linearGradient id="shroudGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#757c84" />
+                <stop offset="100%" stop-color="#444a50" />
+              </linearGradient>
+            </defs>
+
+            <!-- Shroud / Housing ring with inner lip -->
+            <circle cx="60" cy="60" r="56" fill="url(#shroudGrad)" stroke="#2f3337" stroke-width="4" />
+            <circle cx="60" cy="60" r="50" fill="none" stroke="#1f2327" stroke-width="1" opacity="0.6" />
+
+            <!-- Blades group with animation + blur style based on speed -->
+            <g class="blade" data-bind="style: { animationDuration: fanAnimDuration, filter: fanBlurStyle }">
+              <!-- Define a realistic wide-chord blade profile at center, then rotate 6x -->
+              <g transform="translate(60,60)">
+                <g id="blade6" fill="url(#bladeMetal)">
+                  <path d="M 2 -18 C 8 -30, 22 -40, 34 -42 C 45 -44, 50 -42, 52 -38 C 54 -33, 49 -27, 42 -24 C 33 -20, 22 -15, 14 -9 C 6 -3, 0 4, -2 10 C -4 15, -6 18, -10 18 C -14 18, -16 14, -16 10 C -16 2, -10 -8, 2 -18 Z" stroke="#2d3237" stroke-width="0.6" />
+                  <path d="M 4 -16 C 12 -26, 24 -36, 36 -38" fill="none" stroke="url(#edgeHighlight)" stroke-width="1" opacity="0.55" />
+                </g>
+                <use href="#blade6" transform="rotate(0)" />
+                <use href="#blade6" transform="rotate(60)" />
+                <use href="#blade6" transform="rotate(120)" />
+                <use href="#blade6" transform="rotate(180)" />
+                <use href="#blade6" transform="rotate(240)" />
+                <use href="#blade6" transform="rotate(300)" />
+              </g>
             </g>
-            <circle cx="60" cy="60" r="8" fill="#1f2a38" stroke="#2b90d9" />
+
+            <!-- Hub and bolts -->
+            <circle cx="60" cy="60" r="11" fill="url(#hubMetal)" stroke="#3b4147" stroke-width="0.9" />
+            <circle cx="60" cy="60" r="4" fill="#343a40" />
+            <g fill="#666b72" stroke="#2d3237" stroke-width="0.5">
+              <circle cx="60" cy="12" r="2" />
+              <circle cx="60" cy="12" r="2" transform="rotate(60 60 60)" />
+              <circle cx="60" cy="12" r="2" transform="rotate(120 60 60)" />
+              <circle cx="60" cy="12" r="2" transform="rotate(180 60 60)" />
+              <circle cx="60" cy="12" r="2" transform="rotate(240 60 60)" />
+              <circle cx="60" cy="12" r="2" transform="rotate(300 60 60)" />
+            </g>
           </svg>
         </div>
         <div class="controls">
@@ -167,7 +224,7 @@
             <h6>روشن/خاموش</h6>
             <div class="toggle">
               <label class="switch">
-                <input class="form-check-input" type="checkbox" data-bind="checked: powerCmd, enable: $root.canWriteUnit(name) && !isBusy(), click: onTogglePower" id="powerSwitch_1">
+                <input class="form-check-input" type="checkbox" data-bind="checked: powerCmd, enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), click: onTogglePower" id="powerSwitch_1">
                 <span class="slider"></span>
                 <span class="switch-label" data-bind="text: powerFb() ? 'روشن' : 'خاموش'"></span>
               </label>
@@ -177,13 +234,13 @@
           <div class="control">
             <h6>نقطه تنظیم (°C)</h6>
             <div class="setpoint">
-              <button class="btn-step minus" data-bind="attr: { title: '-' + spStep }, click: function(){ var v = parseFloat(setpointCmd()); if(isNaN(v)) v = spMin; var s = +spStep; setpointCmd(Math.min(spMax, Math.max(spMin, +(v - s).toFixed(1)))); }">-</button>
-              <input type="range" data-bind="value: setpointCmd, valueUpdate: 'input', enable: !isBusy(), attr: {min: spMin, max: spMax, step: spStep}" />
-              <button class="btn-step plus" data-bind="attr: { title: '+' + spStep }, click: function(){ var v = parseFloat(setpointCmd()); if(isNaN(v)) v = spMin; var s = +spStep; setpointCmd(Math.min(spMax, Math.max(spMin, +(v + s).toFixed(1)))); }">+</button>
+              <button class="btn-step minus" data-bind="enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), attr: { title: '-' + spStep }, click: function(){ var v = parseFloat(setpointCmd()); if(isNaN(v)) v = spMin; var s = +spStep; setpointCmd(Math.min(spMax, Math.max(spMin, +(v - s).toFixed(1)))); }">-</button>
+              <input type="range" data-bind="value: setpointCmd, valueUpdate: 'input', enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), attr: {min: spMin, max: spMax, step: spStep}" />
+              <button class="btn-step plus" data-bind="enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), attr: { title: '+' + spStep }, click: function(){ var v = parseFloat(setpointCmd()); if(isNaN(v)) v = spMin; var s = +spStep; setpointCmd(Math.min(spMax, Math.max(spMin, +(v + s).toFixed(1)))); }">+</button>
               <span class="value-big" data-bind="text: Number(setpointCmd()).toFixed(1)"></span>
             </div>
             <div class="muted" style="margin-top:6px; font-size:12px;">اعمال شده:&nbsp;<strong data-bind="text: (setpointFb()==null? '-' : setpointFb())"></strong>&nbsp;°C</div>
-            <button type="button" class="btn btn-primary btn-sm" data-bind="click: onApplySetpoint, enable: $root.canWriteUnit(name) && !isBusy()">اعمال</button>
+            <button type="button" class="btn btn-primary btn-sm" data-bind="click: onApplySetpoint, enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy()">اعمال</button>
           </div>
 
           <div class="control">
@@ -201,7 +258,7 @@
         <span data-bind="visible: alarmActive">هشدار فعال</span>
         <span data-bind="visible: !alarmActive()">بدون هشدار</span>
       </div>
-    </div>
+      </div>
   </div>
 
   <!-- Minimal deps temporarily disabled to isolate SyntaxError source -->
@@ -477,7 +534,7 @@
       }
 
       function UnitVM(cfg, adapter, root){
-        var self = this; cfg = cfg||{}; self.name = cfg.name || 'Unit'; self.vars = cfg.vars || {}; self.root = root || null;
+        var self = this; cfg = cfg||{}; self.name = cfg.name || 'Unit'; self.vars = cfg.vars || {}; self.root = root || null; self.isDisabled = ko.observable(!!cfg.disabled);
         self.powerFb = ko.observable(false); self.tempCurrent = ko.observable(0).extend({ rateLimit: 250 }); self.modeFb = ko.observable('auto'); self.fanSpeedFb = ko.observable(0).extend({ rateLimit: 250 }); self.alarmActive = ko.observable(false);
 
         // Added: UI state and command observables referenced by bindings
@@ -532,6 +589,13 @@
           var factor = Math.min(2.75, Math.max(0, sp)/900 * 2.75);
           var dur = 3 - factor;
           return dur.toFixed(2) + 's';
+        });
+
+        // Blur increases with speed for a more realistic motion feel
+        self.fanBlurStyle = ko.pureComputed(function(){
+          var sp = Number(self.fanSpeedFb() || 0);
+          var px = Math.max(0, Math.min(5, sp / 200)); // 0..5px
+          return 'blur(' + px.toFixed(2) + 'px)';
         });
 
         // Added: command handlers (no device write yet; just local state + logging)
@@ -694,9 +758,11 @@
 
       function RootVM(){
         var self = this; self.units = ko.observableArray([]); self.connectionClass = ko.observable('status-warn'); self.connectionText = ko.observable('در حال اتصال...'); self.pollingMs = 1000; self.lastError = ko.observable('');
+        // Desktop layout: always show 10 slots (5x2)
+        self.maxSlots = 10;
         self.strictMode = ko.observable(true);
         self.requireConfirmPower = ko.observable(true);
-        self.writeWhitelist = ko.observableArray(['Chiller-1']);
+        self.writeWhitelist = ko.observableArray(['رول کاعد']);
         self.isConnected = ko.observable(false);
         self.canWriteUnit = function(unitName){
           if(!self.isConnected()) return false;
@@ -713,8 +779,15 @@
             if(devUrl){ adapter = SafeAdapter(devUrl); }
             var arr = (cfg && cfg.units) || [];
             self.units(arr.map(function(u){ return new UnitVM(u, adapter, self); }));
+            // Fill to 10 slots with disabled placeholders that look like full cards
+            while(self.units().length < self.maxSlots){
+              self.units.push(new UnitVM({ name: 'رول کاعد', vars: {}, disabled: true }, adapter, self));
+            }
           }).catch(function(){
-            self.units([ new UnitVM({ name:'Chiller-1', vars:{} }, adapter, self) ]);
+            self.units([ new UnitVM({ name:'رول کاعد', vars:{} }, adapter, self) ]);
+            while(self.units().length < self.maxSlots){
+              self.units.push(new UnitVM({ name: 'رول کاعد', vars: {}, disabled: true }, adapter, self));
+            }
           });
         };
         var timer = null, ticking = false, consecutiveFails = 0;
