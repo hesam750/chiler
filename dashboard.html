@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -23,6 +23,7 @@
   
   <link rel="stylesheet" href="css/bootstrap.min.css" />
   <link rel="stylesheet" href="css/base-page.css" />
+  <link rel="stylesheet" href="css/rtl.css" />
   <style>
     body { background: #0f141a; color: #e6edf3; }
     :root { --fanSize: clamp(80px, 10vw, 120px); --gap: 12px; }
@@ -118,10 +119,10 @@
   <div class="topbar">
     <div class="brand">
       <img src="fanap.png" alt="Fanap Logo" />
-      <strong>Chiller Dashboard</strong>
+      <strong>داشبورد چیلر</strong>
     </div>
     <div class="meta" style="display:flex;align-items:center;gap:8px;">
-      <span class="muted">Status:</span>
+      <span class="muted">وضعیت:</span>
       <span class="status-dot" data-bind="css: connectionClass"></span>
       <span data-bind="text: connectionText"></span>
     </div>
@@ -132,8 +133,8 @@
   </div>
 
   <div style="padding:8px 16px;">
-    <button id="btn-open-pgd" class="btn btn-primary btn-sm">Open Virtual Display</button>
-    <span id="cpco-version" class="muted" style="margin-left:8px;">Loading info...</span>
+    <button id="btn-open-pgd" class="btn btn-primary btn-sm">باز کردن نمایشگر مجازی</button>
+    <span id="cpco-version" class="muted" style="margin-left:8px;">در حال بارگذاری...</span>
   </div>
 
   <div class="cards" data-bind="foreach: units">
@@ -148,46 +149,47 @@
       </div>
       <div class="card-body">
         <div class="fan" data-bind="css: { running: powerFb(), alarm: alarmActive(), stopped: !powerFb() && !alarmActive() }">
-          <!-- Inline SVG fan with animated blades; speed controlled by animation-duration -->
+          <!-- 5-blade inline SVG fan; speed controlled by animation-duration -->
           <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
             <circle cx="60" cy="60" r="56" fill="#0b1119" stroke="#1f2a38" stroke-width="4" />
             <g class="blade" data-bind="style: { animationDuration: fanAnimDuration }">
-              <path d="M60 15 C70 22, 76 30, 78 40 C80 52, 68 56, 60 60 C52 56, 40 52, 42 40 C44 30, 50 22, 60 15" />
-              <path d="M15 60 C22 50, 30 44, 40 42 C52 40, 56 52, 60 60 C56 68, 52 80, 40 78 C30 76, 22 70, 15 60" />
-              <path d="M60 105 C50 98, 44 90, 42 80 C40 68, 52 64, 60 60 C68 64, 80 68, 78 80 C76 90, 70 98, 60 105" />
-              <path d="M105 60 C98 70, 90 76, 80 78 C68 80, 64 68, 60 60 C64 52, 68 40, 80 42 C90 44, 98 50, 105 60" />
+              <path d="M60 18 C70 26, 76 34, 78 44 C80 56, 68 60, 60 60 C52 60, 40 56, 42 44 C44 34, 50 26, 60 18" />
+              <path d="M60 18 C70 26, 76 34, 78 44 C80 56, 68 60, 60 60 C52 60, 40 56, 42 44 C44 34, 50 26, 60 18" transform="rotate(72 60 60)" />
+              <path d="M60 18 C70 26, 76 34, 78 44 C80 56, 68 60, 60 60 C52 60, 40 56, 42 44 C44 34, 50 26, 60 18" transform="rotate(144 60 60)" />
+              <path d="M60 18 C70 26, 76 34, 78 44 C80 56, 68 60, 60 60 C52 60, 40 56, 42 44 C44 34, 50 26, 60 18" transform="rotate(216 60 60)" />
+              <path d="M60 18 C70 26, 76 34, 78 44 C80 56, 68 60, 60 60 C52 60, 40 56, 42 44 C44 34, 50 26, 60 18" transform="rotate(288 60 60)" />
             </g>
             <circle cx="60" cy="60" r="8" fill="#1f2a38" stroke="#2b90d9" />
           </svg>
         </div>
         <div class="controls">
           <div class="control">
-            <h6>Power</h6>
+            <h6>روشن/خاموش</h6>
             <div class="toggle">
               <label class="switch">
                 <input class="form-check-input" type="checkbox" data-bind="checked: powerCmd, enable: $root.canWriteUnit(name) && !isBusy(), click: onTogglePower" id="powerSwitch_1">
                 <span class="slider"></span>
-                <span class="switch-label" data-bind="text: powerFb() ? 'ON' : 'OFF'"></span>
+                <span class="switch-label" data-bind="text: powerFb() ? 'روشن' : 'خاموش'"></span>
               </label>
             </div>
           </div>
 
           <div class="control">
-            <h6>Setpoint (°C)</h6>
+            <h6>نقطه تنظیم (°C)</h6>
             <div class="setpoint">
               <button class="btn-step minus" data-bind="attr: { title: '-' + spStep }, click: function(){ var v = parseFloat(setpointCmd()); if(isNaN(v)) v = spMin; var s = +spStep; setpointCmd(Math.min(spMax, Math.max(spMin, +(v - s).toFixed(1)))); }">-</button>
               <input type="range" data-bind="value: setpointCmd, valueUpdate: 'input', enable: !isBusy(), attr: {min: spMin, max: spMax, step: spStep}" />
               <button class="btn-step plus" data-bind="attr: { title: '+' + spStep }, click: function(){ var v = parseFloat(setpointCmd()); if(isNaN(v)) v = spMin; var s = +spStep; setpointCmd(Math.min(spMax, Math.max(spMin, +(v + s).toFixed(1)))); }">+</button>
               <span class="value-big" data-bind="text: Number(setpointCmd()).toFixed(1)"></span>
             </div>
-            <div class="muted" style="margin-top:6px; font-size:12px;">Applied:&nbsp;<strong data-bind="text: (setpointFb()==null? '-' : setpointFb())"></strong>&nbsp;°C</div>
-            <button type="button" class="btn btn-primary btn-sm" data-bind="click: onApplySetpoint, enable: $root.canWriteUnit(name) && !isBusy()">Apply</button>
+            <div class="muted" style="margin-top:6px; font-size:12px;">اعمال شده:&nbsp;<strong data-bind="text: (setpointFb()==null? '-' : setpointFb())"></strong>&nbsp;°C</div>
+            <button type="button" class="btn btn-primary btn-sm" data-bind="click: onApplySetpoint, enable: $root.canWriteUnit(name) && !isBusy()">اعمال</button>
           </div>
 
           <div class="control">
-            <h6>Temperature</h6>
+            <h6>دما</h6>
             <div>
-              <div>Current: <strong data-bind="text: tempCurrent"></strong> °C</div>
+              <div>فعلی: <strong data-bind="text: tempCurrent"></strong> °C</div>
             </div>
           </div>
 
@@ -196,8 +198,8 @@
         </div>
       </div>
       <div class="footer">
-        <span data-bind="visible: alarmActive">Alarm Active</span>
-        <span data-bind="visible: !alarmActive()">No Alarm</span>
+        <span data-bind="visible: alarmActive">هشدار فعال</span>
+        <span data-bind="visible: !alarmActive()">بدون هشدار</span>
       </div>
     </div>
   </div>
@@ -517,8 +519,8 @@
 
         // Added: computed properties used by bindings
         self.stateText = ko.pureComputed(function(){
-          if(self.alarmActive()) return 'Alarm';
-          return self.powerFb() ? 'Running' : 'Stopped';
+          if(self.alarmActive()) return 'هشدار';
+          return self.powerFb() ? 'در حال کار' : 'متوقف';
         });
         self.stateBadgeClass = ko.pureComputed(function(){
           if(self.alarmActive()) return 'badge-alarm';
@@ -526,7 +528,9 @@
         });
         self.fanAnimDuration = ko.pureComputed(function(){
           var sp = Number(self.fanSpeedFb() || 0);
-          var dur = 3 - Math.min(2.5, Math.max(0, sp)/100*2.5); // 3s (0%) -> 0.5s (100%)
+          // Faster mapping: 0% -> 3s, 900 (max) -> ~0.25s
+          var factor = Math.min(2.75, Math.max(0, sp)/900 * 2.75);
+          var dur = 3 - factor;
           return dur.toFixed(2) + 's';
         });
 
@@ -689,7 +693,7 @@
       }
 
       function RootVM(){
-        var self = this; self.units = ko.observableArray([]); self.connectionClass = ko.observable('status-warn'); self.connectionText = ko.observable('Connecting...'); self.pollingMs = 1000; self.lastError = ko.observable('');
+        var self = this; self.units = ko.observableArray([]); self.connectionClass = ko.observable('status-warn'); self.connectionText = ko.observable('در حال اتصال...'); self.pollingMs = 1000; self.lastError = ko.observable('');
         self.strictMode = ko.observable(true);
         self.requireConfirmPower = ko.observable(true);
         self.writeWhitelist = ko.observableArray(['Chiller-1']);
@@ -730,13 +734,13 @@
                 var allRejected = results.every(function(r){ return r.status==='rejected'; });
                 if(allRejected){
                   self.isConnected(false);
-                  consecutiveFails++; self.connectionClass('status-err'); self.connectionText('No connection');
+            consecutiveFails++; self.connectionClass('status-err'); self.connectionText('بدون اتصال');
                   var firstErr = results.find(function(r){ return r.status==='rejected'; });
                   var msg = (firstErr && firstErr.reason && (firstErr.reason.message || String(firstErr.reason))) || 'Connection failed'; self.lastError(msg);
                 } else if(ok){
                   self.isConnected(true);
-                  consecutiveFails = 0; self.lastError(''); self.connectionClass('status-ok'); self.connectionText('Connected');
-                } else { self.isConnected(false); consecutiveFails = 0; self.lastError(''); self.connectionClass('status-warn'); self.connectionText('Partial'); }
+            consecutiveFails = 0; self.lastError(''); self.connectionClass('status-ok'); self.connectionText('متصل');
+          } else { self.isConnected(false); consecutiveFails = 0; self.lastError(''); self.connectionClass('status-warn'); self.connectionText('ناقص'); }
               }).finally(function(){
                 ticking = false; var delay = self.pollingMs * (consecutiveFails > 3 ? 2 : 1); timer = setTimeout(tick, delay);
               });
@@ -846,7 +850,7 @@
       
       // Show install button or notification
       const installBtn = document.createElement('button');
-      installBtn.textContent = 'Install App';
+      installBtn.textContent = 'نصب برنامه';
       installBtn.className = 'btn btn-primary btn-sm';
       installBtn.style.cssText = 'position:fixed;top:10px;right:10px;z-index:9999;';
       installBtn.addEventListener('click', function() {
