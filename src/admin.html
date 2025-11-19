@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>مدیریت چیلرها</title>
+  <link rel="icon" href="./favicon.ico">
+  <base href="/src/">
+  <link rel="stylesheet" href="./styles/bootstrap.min.css" />
+  <style>
+    :root{
+      --bg: #f8fafc; /* slate-50 */
+      --card: #ffffff;
+      --fg: #0f172a; /* slate-900 */
+      --muted: #64748b; /* slate-500 */
+      --border: #e2e8f0; /* slate-200 */
+      --primary: #2563eb; /* blue-600 */
+      --primary-700: #1d4ed8;
+      --danger: #ef4444; /* red-500 */
+      --danger-700: #dc2626;
+      --success: #16a34a; /* green-600 */
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+    html, body { height: 100%; }
+    body { font-family: IRANSans, Yekan, sans-serif; background: var(--bg); color: var(--fg); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    .app-header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; background: rgba(255,255,255,.85); backdrop-filter: blur(8px) saturate(1.05); }
+    .brand { font-weight: 700; font-size: 18px; }
+    .header-actions { display: flex; gap: 8px; }
+    .btn { border-radius: 8px; }
+    .btn-primary { background: var(--primary); border-color: var(--primary-700); }
+    .btn-outline { background: #fff; color: var(--fg); border-color: var(--border); }
+    .btn-danger { background: var(--danger); border-color: var(--danger-700); }
+    .muted { color: var(--muted); font-size: 13px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); }
+    .toolbar { display: grid; grid-template-columns: 1fr 2fr auto auto; gap: 12px; align-items: end; margin-bottom: 16px; }
+    @media (max-width: 768px){ .toolbar { grid-template-columns: 1fr; } }
+    .form-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .form-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+    .table-wrapper { overflow-x: auto; }
+    .table { background: var(--card); min-width: 720px; }
+    .table thead th { position: sticky; top: 0; background: #f1f5f9; font-weight: 600; z-index: 1; }
+    .table tbody td { vertical-align: middle; }
+    .actions { display: flex; gap: 8px; }
+    .status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+    .status.ok { color: var(--success); }
+    .status.err { color: var(--danger); }
+
+    /* Focus accessibility */
+    .form-input:focus-visible, .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    /* Dark scheme support */
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg: #0b1220;
+        --card: rgba(15,23,42,.72);
+        --fg: #e2e8f0;
+        --muted: #94a3b8;
+        --border: #1f2a38;
+        --shadow: 0 10px 30px rgba(0,0,0,.35);
+      }
+      .card{ backdrop-filter: blur(8px) saturate(1.05); }
+      .app-header{ background: rgba(15,23,42,.72); }
+      .table thead th{ background: rgba(30,41,59,.85); }
+      .btn-outline{ background: rgba(255,255,255,.08); border-color: #334155; color: var(--fg); }
+    }
+
+    /* Mobile responsive list */
+    .mobile-list { display: none; }
+    @media (max-width: 768px){
+      .table-wrapper { display: none; }
+      .mobile-list { display: grid; gap: 12px; }
+      .unit-card { padding: 12px; }
+      .unit-card .row { display: grid; grid-template-columns: 1fr; gap: 10px; }
+      .unit-card .title { font-weight: 600; font-size: 16px; }
+      .unit-card .muted { font-size: 12px; }
+      .app-header{ padding: 10px 0; }
+      .brand{ font-size: 16px; }
+      .btn{ padding: 8px 10px; font-size: 14px; }
+    }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.38); display: none; align-items: center; justify-content: center; z-index: 50; }
+    .modal { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; width: 420px; max-width: 95vw; box-shadow: var(--shadow); }
+    .modal h3 { margin: 0 0 12px; font-size: 16px; }
+    .modal .form-group { margin-bottom: 10px; }
+    .modal .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .modal .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/knockout@3.5.1/build/output/knockout-latest.js" onerror="this.onerror=null;this.src='https://unpkg.com/knockout@3.5.1/build/output/knockout-latest.js'"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="app-header">
+      <div class="brand">مدیریت چیلرها</div>
+      <div class="header-actions">
+        <a class="btn btn-outline" href="/src/dashboard.html?config=/src/assets/admin/config.json" target="_blank">مشاهده داشبورد</a>
+        <button class="btn btn-outline" title="خروج" data-bind="visible: isAuthenticated, click: logout">
+          <span class="logout-icon">⎋</span>
+          <span class="logout-text">خروج</span>
+        </button>
+      </div>
+    </div>
+
+    <p class="muted">نام‌گذاری، افزودن/حذف، و وضعیت تعمیر و غیرفعال برای هر چیلر</p>
+
+    <div class="card" style="padding: 12px;">
+      <div class="toolbar">
+        <div>
+          <div class="form-label">فاصله‌زمان polling (ms)</div>
+          <input class="form-input" type="number" min="200" step="100" data-bind="value: pollingMs">
+        </div>
+        <div>
+          <div class="form-label">آدرس دستگاه پیش‌فرض</div>
+          <input class="form-input" type="text" placeholder="مثال: http://169.254.61.68/getvar.csv" data-bind="value: defaultDeviceUrl">
+        </div>
+        <button class="btn btn-outline" data-bind="click: openAddModal">افزودن چیلر</button>
+        <div>
+          <button class="btn btn-primary" data-bind="click: saveConfig, enable: !busy() && isAuthenticated()">ذخیره تغییرات</button>
+          <span class="status ok" data-bind="visible: saveStatus() === 'ok'">ذخیره شد</span>
+          <span class="status err" data-bind="visible: saveStatus() === 'err'">خطا در ذخیره</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrapper" style="margin-top:12px;">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th style="width: 28%">نام چیلر</th>
+            <th style="width: 36%">آدرس دستگاه (URL)</th>
+            <th style="width: 12%">حالت تعمیر</th>
+            <th style="width: 12%">غیرفعال</th>
+            <th style="width: 12%">اقدامات</th>
+          </tr>
+        </thead>
+        <tbody data-bind="foreach: units">
+          <tr>
+            <td>
+              <input class="form-input" type="text" data-bind="value: name, valueUpdate: 'input'" placeholder="نام چیلر" />
+            </td>
+            <td>
+              <input class="form-input" type="text" data-bind="value: deviceUrl, valueUpdate: 'input'" placeholder="مثال: http://169.254.61.68/getvar.csv" />
+              <div class="muted">اگر خالی باشد از آدرس پیش‌فرض استفاده می‌شود</div>
+            </td>
+            <td>
+              <label class="muted" style="display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" data-bind="checked: maintenance" /> فعال
+              </label>
+            </td>
+            <td>
+              <label class="muted" style="display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" data-bind="checked: disabled" /> بله
+              </label>
+            </td>
+            <td>
+              <div class="actions">
+                <button class="btn btn-danger" data-bind="click: $parent.removeUnit">حذف</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mobile-list" data-bind="foreach: units">
+      <div class="card unit-card">
+        <div class="row">
+          <div class="title" data-bind="text: name"></div>
+          <div>
+            <div class="form-label">نام چیلر</div>
+            <input class="form-input" type="text" data-bind="value: name, valueUpdate: 'input'" placeholder="نام چیلر" />
+          </div>
+          <div>
+            <div class="form-label">آدرس دستگاه (URL)</div>
+            <input class="form-input" type="text" data-bind="value: deviceUrl, valueUpdate: 'input'" placeholder="مثال: http://169.254.61.68/getvar.csv" />
+            <div class="muted">اگر خالی باشد از آدرس پیش‌فرض استفاده می‌شود</div>
+          </div>
+          <div style="display:flex; gap:14px;">
+            <label class="muted" style="display:flex; align-items:center; gap:6px;">
+              <input type="checkbox" data-bind="checked: maintenance" /> حالت تعمیر
+            </label>
+            <label class="muted" style="display:flex; align-items:center; gap:6px;">
+              <input type="checkbox" data-bind="checked: disabled" /> غیرفعال
+            </label>
+          </div>
+          <div class="actions" style="justify-content:flex-end;">
+            <button class="btn btn-danger" data-bind="click: $parent.removeUnit">حذف</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Add Chiller -->
+    <div id="admin-add-chiller-modal" class="modal-backdrop" style="display:none;">
+      <div class="modal">
+        <h3>افزودن چیلر</h3>
+        <div class="form-group">
+          <div class="form-label">نام چیلر</div>
+          <input type="text" id="admin-add-chiller-name" placeholder="مثلاً چیلر انبار" class="form-input" />
+        </div>
+        <div class="form-group">
+          <div class="form-label">آدرس دستگاه (IP یا URL)</div>
+          <input type="text" id="admin-add-chiller-url" placeholder="169.254.61.68 یا http://169.254.61.68/getvar.csv" class="form-input" />
+          <div class="hint">اگر فقط IP وارد کنید، خودکار به http://IP/getvar.csv تبدیل می‌شود.</div>
+        </div>
+        <div class="actions">
+          <button id="admin-add-chiller-save" class="btn btn-primary">ذخیره</button>
+          <button id="admin-add-chiller-cancel" class="btn btn-outline">انصراف</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Login -->
+    <div id="admin-login-modal" class="modal-backdrop" style="display:none;">
+      <div class="modal">
+        <h3>ورود ادمین</h3>
+        <div class="form-group">
+          <div class="form-label">نام کاربری</div>
+          <input type="text" id="admin-login-username" placeholder="admin" class="form-input" />
+        </div>
+        <div class="form-group">
+          <div class="form-label">رمز عبور</div>
+          <input type="password" id="admin-login-password" placeholder="••••••" class="form-input" />
+        </div>
+        <div class="actions">
+          <button id="admin-login-submit" class="btn btn-primary">ورود</button>
+          <button id="admin-login-cancel" class="btn btn-outline">انصراف</button>
+        </div>
+        <div class="hint">برای ورود، اطلاعات معتبر وارد کنید. در صورت بروز مشکل با سرپرست سیستم تماس بگیرید.</div>
+      </div>
+    </div>
+
+    <script>
+      (function(){
+        function Unit(u){
+          this.name = ko.observable(u && u.name || 'چیلر جدید');
+          this.deviceUrl = ko.observable(u && u.deviceUrl || '');
+          this.maintenance = ko.observable(!!(u && u.maintenance));
+          this.disabled = ko.observable(!!(u && u.disabled));
+          this.vars = u && u.vars || {};
+        }
+        function VM(){
+          var self = this;
+          self.units = ko.observableArray([]);
+          self.busy = ko.observable(false);
+          self.saveStatus = ko.observable(''); // '', 'ok', 'err'
+          self.pollingMs = ko.observable(1000);
+          self.defaultDeviceUrl = ko.observable('');
+          self.isAuthenticated = ko.observable(false);
+          self.username = ko.observable('');
+          self.role = ko.observable('');
+          self.isAdmin = ko.observable(false);
+
+          function normalizeEndpoint(s){
+            s = String(s||'').trim();
+            if(!s) return '';
+            var hasScheme = /^https?:\/\//i.test(s);
+            var hasFile = /getvar\.csv|vars\.htm|setvar\.csv/i.test(s);
+            if(!hasScheme){ if(/^[\d\.]+$/.test(s) || /^[a-z0-9\.\-]+$/i.test(s)) s = 'http://' + s; }
+            if(!hasFile){ s = s.replace(/\/+$/,'') + '/getvar.csv'; }
+            return s;
+          }
+
+          self.load = function(){
+            return fetch('/api/admin/config')
+              .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+              .then(function(cfg){
+                self.pollingMs(typeof cfg.pollingMs === 'number' ? cfg.pollingMs : 1000);
+                self.defaultDeviceUrl(cfg && cfg.deviceUrl || '');
+                var arr = Array.isArray(cfg.units) ? cfg.units : [];
+                var mapped = arr.map(function(u){ return new Unit(u); });
+                self.units(mapped);
+              })
+              .catch(function(){
+                self.units([]);
+              });
+          };
+
+          self.checkAuth = function(){
+            return fetch('/api/auth/me')
+              .then(function(r){ if(r.status===401) return { authenticated:false }; return r.json(); })
+              .then(function(info){
+                var ok = !!(info && info.authenticated);
+                self.isAuthenticated(ok);
+                self.username(ok && info.user && info.user.username || '');
+                var role = ok && info.user && info.user.role || '';
+                self.role(role);
+                self.isAdmin(role === 'admin');
+              })
+              .catch(function(){ self.isAuthenticated(false); self.username(''); });
+          };
+
+          self.openAddModal = function(){ var m=document.getElementById('admin-add-chiller-modal'); if(m){ m.style.display='flex'; } };
+          self.openLoginModal = function(){ var m=document.getElementById('admin-login-modal'); if(m){ m.style.display='flex'; } };
+          self._closeAddModal = function(){ var m=document.getElementById('admin-add-chiller-modal'); if(m){ m.style.display='none'; } var n=document.getElementById('admin-add-chiller-name'); var u=document.getElementById('admin-add-chiller-url'); if(n) n.value=''; if(u) u.value=''; };
+          self._closeLoginModal = function(){ var m=document.getElementById('admin-login-modal'); if(m){ m.style.display='none'; } var u=document.getElementById('admin-login-username'); var p=document.getElementById('admin-login-password'); if(u) u.value=''; if(p) p.value=''; };
+          self.saveNewUnit = function(){
+            var nameEl = document.getElementById('admin-add-chiller-name');
+            var urlEl = document.getElementById('admin-add-chiller-url');
+            var name = (nameEl && nameEl.value || '').trim() || 'چیلر جدید';
+            var url = normalizeEndpoint(urlEl && urlEl.value || '');
+            if(!url){ alert('لطفاً IP یا URL معتبر وارد کنید'); return; }
+            var newUnit = new Unit({ name: name, deviceUrl: url, maintenance: false, disabled: false, vars: {} });
+            self.units.push(newUnit);
+            // Persist to backend
+            self.saveConfig();
+            self._closeAddModal();
+          };
+          self.removeUnit = function(u){ self.units.remove(u); };
+
+          self.saveConfig = function(){
+            self.busy(true); self.saveStatus('');
+            var payload = {
+              pollingMs: Number(self.pollingMs()||1000) || 1000,
+              deviceUrl: (self.defaultDeviceUrl()||'') || null,
+              units: self.units().map(function(u){ return {
+                name: u.name(),
+                deviceUrl: (u.deviceUrl()||'') || null,
+                maintenance: !!u.maintenance(),
+                disabled: !!u.disabled(),
+                vars: u.vars
+              }; })
+            };
+            fetch('/api/admin/config', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) })
+              .then(function(r){ if(r.status===401){ alert('برای ذخیره لازم است وارد شوید'); window.location.replace('/src/login.html'); throw new Error('Unauthorized'); } if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+              .then(function(){ self.saveStatus('ok'); })
+              .catch(function(){ self.saveStatus('err'); })
+              .finally(function(){ self.busy(false); });
+          };
+
+          self.login = function(){
+            var u = document.getElementById('admin-login-username');
+            var p = document.getElementById('admin-login-password');
+            var username = (u && u.value || '').trim();
+            var password = (p && p.value || '').trim();
+            if(!username || !password){ alert('نام کاربری و رمز عبور را وارد کنید'); return; }
+            fetch('/api/auth/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ username: username, password: password }) })
+              .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+              .then(function(){ self._closeLoginModal(); return self.checkAuth(); })
+              .catch(function(){ alert('ورود نامعتبر'); });
+          };
+
+          self.logout = function(){
+            fetch('/api/auth/logout', { method:'POST' })
+              .then(function(){ window.location.replace('/src/login.html'); })
+              .catch(function(){ window.location.replace('/src/login.html'); });
+          };
+        }
+        var vm = new VM();
+        ko.applyBindings(vm);
+        vm.checkAuth().then(function(){
+          if(vm.isAuthenticated() && !vm.isAdmin()){
+            window.location.href = '/src/dashboard.html?config=/src/assets/admin/config.json';
+            return;
+          }
+          if(!vm.isAuthenticated()){
+            window.location.replace('/src/login.html');
+            return;
+          }
+          vm.load();
+        });
+      })();
+    </script>
+
+    <script>
+      (function(){
+        document.addEventListener('DOMContentLoaded', function(){
+          var btnSave = document.getElementById('admin-add-chiller-save');
+          var btnCancel = document.getElementById('admin-add-chiller-cancel');
+          var modal = document.getElementById('admin-add-chiller-modal');
+          var loginSubmit = document.getElementById('admin-login-submit');
+          var loginCancel = document.getElementById('admin-login-cancel');
+          var loginModal = document.getElementById('admin-login-modal');
+          if(btnSave) btnSave.addEventListener('click', function(){ try { var vm = ko.dataFor(document.body); if(vm && vm.saveNewUnit) vm.saveNewUnit(); } catch(e){} });
+          if(btnCancel) btnCancel.addEventListener('click', function(){ try { var vm = ko.dataFor(document.body); if(vm && vm._closeAddModal) vm._closeAddModal(); } catch(e){} });
+          if(modal){ modal.addEventListener('click', function(e){ if(e.target === modal){ try { var vm = ko.dataFor(document.body); if(vm && vm._closeAddModal) vm._closeAddModal(); } catch(_){} } }); }
+          if(loginSubmit) loginSubmit.addEventListener('click', function(){ try { var vm = ko.dataFor(document.body); if(vm && vm.login) vm.login(); } catch(e){} });
+          if(loginCancel) loginCancel.addEventListener('click', function(){ try { var vm = ko.dataFor(document.body); if(vm && vm._closeLoginModal) vm._closeLoginModal(); } catch(e){} });
+          if(loginModal){ loginModal.addEventListener('click', function(e){ if(e.target === loginModal){ try { var vm = ko.dataFor(document.body); if(vm && vm._closeLoginModal) vm._closeLoginModal(); } catch(_){} } }); }
+        });
+      })();
+    </script>
+  </div>
+</body>
+</html>

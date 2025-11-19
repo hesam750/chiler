@@ -1,0 +1,410 @@
+<!-- Header Component - Enhanced Design -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">
+      <img src="../dashboard/fanap.png" alt="Fanap Logo" />
+      <div class="logo-glow"></div>
+    </div>
+    <div class="brand-text">
+      <h1 class="app-title">داشبورد چیلر</h1>
+      <span class="app-subtitle">سیستم مدیریت سرمایش</span>
+    </div>
+  </div>
+  
+  <div class="top-actions">
+    <!-- Connection Status -->
+    <div class="connection-status" data-bind="css: connectionClass">
+      <div class="status-indicator">
+        <span class="status-dot"></span>
+        <div class="status-pulse"></div>
+      </div>
+      <div class="status-info">
+        <span class="status-label">وضعیت اتصال</span>
+        <span class="status-text" data-bind="text: connectionText"></span>
+      </div>
+    </div>
+    
+    <!-- Theme Toggle -->
+    <div class="theme-toggle-wrapper">
+      <button id="theme-toggle" class="btn-theme" type="button" title="تغییر تم">
+        <span class="theme-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm0-18a8 8 0 1 1 0 16 8 8 0 0 1 0-16z"/>
+            <path d="M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/>
+          </svg>
+        </span>
+        <span class="theme-label" id="theme-label">تاریک</span>
+      </button>
+    </div>
+    
+    <!-- Additional Controls -->
+    <div class="header-controls">
+      <button class="btn-header-control" title="تنظیمات">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5 3.5 3.5 0 0 1 15.5 12 3.5 3.5 0 0 1 12 15.5zm0-2a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+          <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65A.488.488 0 0 0 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/>
+        </svg>
+      </button>
+      
+      <button class="btn-header-control" title="اطلاعات سیستم">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Responsive Menu Toggle (Mobile) -->
+<div class="mobile-menu-toggle">
+  <button class="btn-menu-toggle" aria-label="منو">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+</div>
+
+<style>
+  /* Enhanced Header Styles */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+    min-height: 70px;
+  }
+  
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .brand-logo {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary) 0%, #1a73e8 100%);
+    box-shadow: 0 4px 12px rgba(43, 144, 217, 0.35);
+  }
+  
+  .brand-logo img {
+    height: 24px;
+    filter: brightness(0) invert(1);
+    z-index: 2;
+    position: relative;
+  }
+  
+  .logo-glow {
+    position: absolute;
+    inset: -2px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(43, 144, 217, 0.4) 0%, rgba(26, 115, 232, 0.2) 100%);
+    filter: blur(8px);
+    z-index: 1;
+    animation: logoPulse 3s ease-in-out infinite;
+  }
+  
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .app-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.2;
+  }
+  
+  .app-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+  
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .connection-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: var(--surface-2);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .connection-status:hover {
+    background: var(--surface);
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(49, 130, 206, 0.15);
+  }
+  
+  .status-indicator {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: block;
+    z-index: 2;
+    position: relative;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  }
+  
+  .status-pulse {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.3;
+    animation: statusPulse 2s ease-in-out infinite;
+  }
+  
+  .status-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .status-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  
+  .status-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  
+  .btn-theme {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .btn-theme:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+  }
+  
+  .theme-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .header-controls {
+    display: flex;
+    gap: 8px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 16px;
+  }
+  
+  .btn-header-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .btn-header-control:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+  }
+  
+  .mobile-menu-toggle {
+    display: none;
+  }
+  
+  /* Animations */
+  @keyframes logoPulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+  }
+  
+  @keyframes statusPulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .topbar {
+      padding: 14px 16px;
+    }
+    
+    .app-title {
+      font-size: 16px;
+    }
+    
+    .app-subtitle {
+      display: none;
+    }
+    
+    .top-actions {
+      gap: 16px;
+    }
+    
+    .connection-status {
+      padding: 6px 12px;
+    }
+    
+    .status-label {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .topbar {
+      padding: 12px;
+      min-height: 60px;
+    }
+    
+    .brand {
+      gap: 12px;
+    }
+    
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+    }
+    
+    .brand-logo img {
+      height: 20px;
+    }
+    
+    .app-title {
+      font-size: 15px;
+    }
+    
+    .connection-status {
+      padding: 6px 10px;
+    }
+    
+    .status-text {
+      font-size: 12px;
+    }
+    
+    .btn-theme {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    
+    .header-controls {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .topbar {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    .brand {
+      flex: 1;
+    }
+    
+    .top-actions {
+      flex: 1;
+      justify-content: flex-end;
+    }
+    
+    .connection-status {
+      min-width: auto;
+    }
+    
+    .status-text {
+      display: none;
+    }
+    
+    .btn-theme .theme-label {
+      display: none;
+    }
+    
+    .mobile-menu-toggle {
+      display: block;
+    }
+    
+    .btn-menu-toggle {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 8px 6px;
+      cursor: pointer;
+    }
+    
+    .btn-menu-toggle span {
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-menu-toggle:hover span {
+      background: var(--primary);
+    }
+  }
+</style>

@@ -1,0 +1,27 @@
+{
+  "pollingMs": 1000,
+  "deviceUrl": null,
+  "units": [
+    {
+      "name": "چیلر ۱",
+      "maintenance": false,
+      "disabled": false,
+      "deviceUrl": null,
+      "vars": {}
+    },
+    {
+      "name": "چیلر ۲",
+      "maintenance": false,
+      "disabled": false,
+      "deviceUrl": null,
+      "vars": {}
+    },
+    {
+      "name": "چیلر 8",
+      "maintenance": false,
+      "disabled": true,
+      "deviceUrl": null,
+      "vars": {}
+    }
+  ]
+}

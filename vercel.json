@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" }
+  ],
+  "rewrites": [
+    { "source": "/api/admin/config", "destination": "/api/admin-config.js" },
+    { "source": "/api/proxy", "destination": "/api/proxy.js" },
+    { "source": "/proxy", "destination": "/api/proxy.js" },
+    { "source": "/api/auth/login", "destination": "/api/auth-login.js" },
+    { "source": "/api/auth/logout", "destination": "/api/auth-logout.js" },
+    { "source": "/api/auth/me", "destination": "/api/auth-me.js" },
+    { "source": "/admin", "destination": "/src/admin.html" },
+    { "source": "/dashboard", "destination": "/src/dashboard.html" },
+    { "source": "/", "destination": "/src/index.html" }
+  ]
+}

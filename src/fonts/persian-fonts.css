@@ -1,0 +1,74 @@
+/* Persian Fonts - Iran Sans and BYekan */
+@font-face {
+    font-family: 'Iran Sans';
+    src: url('./IranSans/IRANSansWeb.eot');
+    src: url('./IranSans/IRANSansWeb.eot?#iefix') format('embedded-opentype'),
+         url('./IranSans/IRANSansWeb.woff2') format('woff2'),
+         url('./IranSans/IRANSansWeb.woff') format('woff'),
+         url('./IranSans/IRANSansWeb.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Iran Sans';
+    src: url('./IranSans/IRANSansWeb_Bold.eot');
+    src: url('./IranSans/IRANSansWeb_Bold.eot?#iefix') format('embedded-opentype'),
+         url('./IranSans/IRANSansWeb_Bold.woff2') format('woff2'),
+         url('./IranSans/IRANSansWeb_Bold.woff') format('woff'),
+         url('./IranSans/IRANSansWeb_Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'BYekan';
+    src: url('./BYekan/BYekan.eot');
+    src: url('./BYekan/BYekan.eot?#iefix') format('embedded-opentype'),
+         url('./BYekan/BYekan.woff2') format('woff2'),
+         url('./BYekan/BYekan.woff') format('woff'),
+         url('./BYekan/BYekan.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'BYekan';
+    src: url('./BYekan/BYekan-Bold.eot');
+    src: url('./BYekan/BYekan-Bold.eot?#iefix') format('embedded-opentype'),
+         url('./BYekan/BYekan-Bold.woff2') format('woff2'),
+         url('./BYekan/BYekan-Bold.woff') format('woff'),
+         url('./BYekan/BYekan-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Font family classes for easy usage */
+.iransans {
+    font-family: 'Iran Sans', Tahoma, Arial, sans-serif;
+}
+
+.byekan {
+    font-family: 'BYekan', Tahoma, Arial, sans-serif;
+}
+
+/* Apply Iran Sans as default Persian font for RTL content */
+html[lang="fa"],
+html[dir="rtl"] {
+    font-family: 'Iran Sans', Tahoma, Arial, sans-serif;
+}
+
+/* Specific font usage for different elements */
+.persian-heading {
+    font-family: 'BYekan', 'Iran Sans', Tahoma, Arial, sans-serif;
+    font-weight: bold;
+}
+
+.persian-body {
+    font-family: 'Iran Sans', Tahoma, Arial, sans-serif;
+    line-height: 1.6;
+}
