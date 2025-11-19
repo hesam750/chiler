@@ -11,6 +11,10 @@
     {
       "source": "/src/dashboard",
       "destination": "/dashboard.html"
+    },
+    {
+      "source": "/src/login.html",
+      "destination": "/dashboard.html"
     }
   ],
   "headers": [
