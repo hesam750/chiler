@@ -1,0 +1,19 @@
+<div class="comfort-control-component col-xs-12">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="comfort-temp">Comfort Temperature</label>
+                <input type="number" class="form-control" id="comfort-temp" value="22.0" step="0.5">
+            </div>
+            <button type="button" class="btn btn-primary" data-bind="click: setComfortTemperature">Set Comfort</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div data-bind="visible: IsAlertVisible, css: AlertCssClass" class="alert" role="alert">
+                <button type="button" class="close" aria-label="Close" data-bind="click: closeAlert()"><i class="fa fa-times"></i></button>
+                <div data-bind="text: AlertTitle1"></div>
+            </div>
+        </div>
+    </div>
+</div>

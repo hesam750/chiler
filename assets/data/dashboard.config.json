@@ -1,14 +1,16 @@
 {
-  "deviceUrl": "https://assist-nutrition-disabled-architects.trycloudflare.com/pgd/getvar.csv",
+  "deviceUrl": "http://169.254.61.68/commissioning/getvar.csv",
   "pollingMs": 3000,
   "units": [
     {
       "name": "رول کاعد",
       "vars": {
-        "PowerCmd": "SystemStatus.Ctrl",
-        "PowerFb": "SystemStatus.Ctrl",
+        "PowerCmd": "UnitOnOff",
+        "PowerFb": "CurrUnitStatus",
+        "RemoteOnOffCmd": "RemoteOnOffCmd",
+        "RemoteOnOffFb": "RemoteOnOff",
         "TempCurrent": "SupplyTemp.ReadVal",
-        "TempSetpoint": "CurrRoomTempSetP_Val",
+        "TempSetpoint": "UnitSetP.RoomTempSetP.Comfort",
         "FanSpeedFb": "MB_Devices.FanElectricalInfo_ZA_1.Modulation",
         "AlarmActive": "Al03_PWRP_1.Active"
       },

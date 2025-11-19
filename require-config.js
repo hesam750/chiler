@@ -22,7 +22,10 @@ require.config({
 		"resize-sensor": "lib/ResizeSensor",
 		"ipaddr": "lib/ipaddr-edit",
 		"md5": "lib/md5.min",
-		"cfield.app": "lib/cfield.app"
+		"cfield.app": "lib/cfield.app",
+        "comfort-control": "lib/comfort-control",
+        "comfort-modal": "lib/comfort-modal",
+        "comfort-dashboard-component": "lib/comfort-dashboard-component"
 	},
 	urlArgs: urlArgs,
 	shim: {
@@ -41,7 +44,7 @@ define("jquery", [], function() {
 });
 
 // Start app
-requirejs(["cfield.app"], function(cFieldAppModule) {
+requirejs(["cfield.app", "comfort-control", "comfort-modal", "comfort-dashboard-component"], function(cFieldAppModule) {
 	var baseUrl = "/proxy?url=http://169.254.61.68";
 	var cFieldApp = new cFieldAppModule.CfieldApp.getInstance(baseUrl);
 });

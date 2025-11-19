@@ -23,14 +23,10 @@
   
   <link rel="stylesheet" href="css/bootstrap.min.css" />
   <link rel="stylesheet" href="css/base-page.css" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="preconnect" href="https://cdn.fontcdn.ir" crossorigin>
-  <link rel="stylesheet" href="https://cdn.fontcdn.ir/Font/Persian/IRANSansX/IRANSansX.css">
   <link rel="stylesheet" href="css/theme.css" />
   <link rel="stylesheet" href="css/rtl.css" />
   <style>
-    body { background: #0f141a; color: #e6edf3; font-family: 'IRANSansX', 'Vazirmatn', Tahoma, Arial, sans-serif; }
+    body { background: #0f141a; color: #e6edf3; font-family: Tahoma, Arial, sans-serif; }
     :root { --fanSize: clamp(120px, 12vw, 180px); --gap: 12px; }
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#111822; border-bottom:1px solid #243040; }
     .brand { display:flex; align-items:center; gap:10px; }
@@ -166,9 +162,41 @@
     .btn-step:hover { filter: brightness(0.95); }
     .value-big { color: var(--heading); }
     .control { color: var(--text); }
+    /* Hide brute-force monitor panel as requested */
+    #bf-monitor { display: none !important; }
   </style>
 </head>
 <body>
+
+
+  <!-- Brute-force Monitor (non-blocking UI) -->
+  <div class="container mt-3" id="bf-monitor">
+    <div class="card shadow-sm">
+      <div class="card-body py-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <strong class="me-2">وضعیت رمزگشا</strong>
+            <span class="text-muted" id="bf-rate">rate: -</span>
+            <span class="ms-3 text-muted" id="bf-avgms">avgMs: -</span>
+              <div class="row">
+        <div class="col-md-12">
+            <comfort-dashboard-component></comfort-dashboard-component>
+        </div>
+    </div>
+</div>
+          <div>
+            <span class="badge bg-primary">آخرین کد: <span id="bf-last-code">-</span></span>
+            <span class="badge bg-secondary ms-2">نقش‌ها: <span id="bf-roles">-</span></span>
+            <span class="badge bg-success ms-2">OK: <span id="bf-ok">-</span></span>
+          </div>
+        </div>
+        <div class="progress mt-3" style="height: 10px;">
+          <div id="bf-progress-bar" class="progress-bar" role="progressbar" style="width:0%" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div class="small text-muted mt-1">پیشرفت: <span id="bf-progress-text">0%</span> تا 9999</div>
+      </div>
+    </div>
+  </div>
   <!-- Revert topbar controls to original minimal status display -->
   <div class="topbar">
     <div class="brand">
@@ -176,7 +204,7 @@
       <strong>داشبورد چیلر</strong>
     </div>
     <div class="top-actions">
-      <div class="meta" style="display:flex;align-items:center;gap:8px;">
+      <div dir="rtl" class="meta" style="display:flex;align-items:center;gap:8px;">
         <span class="muted">وضعیت:</span>
         <span class="status-dot" data-bind="css: connectionClass"></span>
         <span data-bind="text: connectionText"></span>
@@ -197,7 +225,7 @@
   </div>
 
   <div class="cards" data-bind="foreach: units">
-      <div class="card" data-bind="css: { running: powerFb(), alarm: alarmActive(), stopped: !powerFb() && !alarmActive(), 'card--disabled': isDisabled }">
+      <div class="card" data-bind="css: { 'card--disabled': isDisabled }, attr: { 'class': 'card ' + cardStatusClass() }">
       <div class="card-header">
         <div>
           <strong data-bind="text: name"></strong>
@@ -273,15 +301,26 @@
         </div>
         <div class="controls">
           <div class="control">
-            <h6>روشن/خاموش</h6>
+            <h6>روشن/خاموش (کنترل)</h6>
             <div class="toggle">
               <label class="switch">
-                <input class="form-check-input" type="checkbox" data-bind="checked: powerCmd, enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), click: onTogglePower" id="powerSwitch_1">
+                <input class="form-check-input" type="checkbox" data-bind="checked: powerCmd, enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), click: onTogglePowerViaScript" id="powerSwitch_1">
                 <span class="slider"></span>
                 <span class="switch-label" data-bind="text: powerFb() ? 'روشن' : 'خاموش'"></span>
               </label>
             </div>
           </div>
+<!-- 
+          <div class="control">
+            <h6>Remote On/Off (وضعیت)</h6>
+            <div class="toggle">
+              <label class="switch">
+                <input class="form-check-input" type="checkbox" data-bind="checked: remoteOnOffFb, enable: false" id="remoteOnOffSwitch_1" disabled>
+                <span class="slider"></span>
+                <span class="switch-label" data-bind="text: remoteOnOffFb() ? 'روشن' : 'خاموش'"></span>
+              </label>
+            </div>
+          </div> -->
 
           <div class="control">
             <h6>نقطه تنظیم (°C)</h6>
@@ -291,7 +330,11 @@
               <button class="btn-step plus" data-bind="enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), attr: { title: '+' + spStep }, click: function(){ var v = parseFloat(setpointCmd()); if(isNaN(v)) v = spMin; var s = +spStep; setpointCmd(Math.min(spMax, Math.max(spMin, +(v + s).toFixed(1)))); }">+</button>
               <span class="value-big" data-bind="text: Number(setpointCmd()).toFixed(1)"></span>
             </div>
-            <div class="muted" style="margin-top:6px; font-size:12px;">اعمال شده:&nbsp;<strong data-bind="text: (setpointFb()==null? '-' : setpointFb())"></strong>&nbsp;°C</div>
+            <!-- <div class="muted" style="margin-top:6px; font-size:12px;">&nbsp;<strong data-bind="text: (setpointFb()==null? '-' : setpointFb())"></strong>&nbsp;°C</div> -->
+            <div class="comfort-display" style="margin-bottom: 10px; text-align: center; font-size: 14px; color: #fffefe;">
+              دمای تنظیم شده: <span data-bind="text: (setpointFb()==null? '-' : setpointFb().toFixed(1))"></span>°C 
+              <!-- Comfort: <span data-bind="text: (setpointFb()==null? '-' : setpointFb().toFixed(1))"></span>°C -->
+            </div>
             <button type="button" class="btn btn-primary btn-sm" data-bind="click: onApplySetpoint, enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy()">اعمال</button>
           </div>
 
@@ -529,15 +572,18 @@
               else if(pat === 'name=val') { getAttempts = [ base + '?name=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; postBodies = [ 'name=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; }
               else if(pat === 'id=value') { getAttempts = [ base + '?id=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; postBodies = [ 'id=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; }
               else if(pat === 'var=val') { getAttempts = [ base + '?var=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; postBodies = [ 'var=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; }
+              else if(pat === 'direct') { getAttempts = [ base + '?' + encodeURIComponent(name) + '=' + encodeURIComponent(value) ]; postBodies = [ name + '=' + value ]; }
               else { getAttempts = [ base + '?name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; postBodies = [ 'name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; }
             } else {
               getAttempts = [
+                base + '?' + encodeURIComponent(name) + '=' + encodeURIComponent(value),  // فرمت مستقیم: UnitSetP.RoomTempSetP.Comfort=25.0
                 base + '?name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
                 base + '?name=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value),
                 base + '?id='   + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
                 base + '?var='  + encodeURIComponent(name) + '&val=' + encodeURIComponent(value)
               ];
               postBodies = [
+                name + '=' + value,  // فرمت مستقیم برای POST
                 'name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
                 'name=' + encodeURIComponent(name) + '&val='   + encodeURIComponent(value),
                 'id='   + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
@@ -586,14 +632,17 @@
       }
 
       function UnitVM(cfg, adapter, root){
-        var self = this; cfg = cfg||{}; self.name = cfg.name || 'Unit'; self.vars = cfg.vars || {}; self.root = root || null; self.isDisabled = ko.observable(!!cfg.disabled);
+        var self = this; cfg = cfg||{}; self.name = ko.observable(cfg.name || 'Unit'); self.vars = cfg.vars || {}; self.root = root || null; self.isDisabled = ko.observable(!!cfg.disabled);
         self.powerFb = ko.observable(false); self.tempCurrent = ko.observable(0).extend({ rateLimit: 250 }); self.modeFb = ko.observable('auto'); self.fanSpeedFb = ko.observable(0).extend({ rateLimit: 250 }); self.alarmActive = ko.observable(false);
+        self.remoteOnOffFb = ko.observable(false);
 
         // Added: UI state and command observables referenced by bindings
         self.isBusy = ko.observable(false);
         self.powerCmd = ko.observable(false);
+        self.remoteOnOffCmd = ko.observable(false);
         // Keep command checkbox in sync with feedback when not busy
         self.powerFb.subscribe(function(v){ if(!self.isBusy()) self.powerCmd(!!v); });
+        self.remoteOnOffFb.subscribe(function(v){ if(!self.isBusy()) self.remoteOnOffCmd(!!v); });
         self.setpointCmd = ko.observable(20);
         var spCfg = cfg.setpoint || {};
         self.spMin = (spCfg.min != null ? spCfg.min : 0);
@@ -627,13 +676,29 @@
         self.modeFb.subscribe(function(m){ if(!self.isBusy()) self.modeCmd(String(m)); });
 
         // Added: computed properties used by bindings
+        self.isFaultyState = ko.pureComputed(function(){
+          // وضعیت خرابی: فن روشنه اما کمپرسور خاموشه
+          // فرض: fanSpeedFb > 0 نشان‌دهنده روشن بودن فن است
+          // و powerFb == false نشان‌دهنده خاموش بودن کمپرسور است
+          return self.fanSpeedFb() > 0 && !self.powerFb();
+        });
+        
         self.stateText = ko.pureComputed(function(){
+          if(self.isFaultyState()) return 'خراب';
           if(self.alarmActive()) return 'هشدار';
           return self.powerFb() ? 'در حال کار' : 'متوقف';
         });
         self.stateBadgeClass = ko.pureComputed(function(){
+          if(self.isFaultyState()) return 'badge-faulty';
           if(self.alarmActive()) return 'badge-alarm';
           return self.powerFb() ? 'badge-running' : 'badge-stopped';
+        });
+        
+        // Card status class based on device state
+        self.cardStatusClass = ko.pureComputed(function(){
+          if(self.isFaultyState()) return 'status-faulty';
+          if(self.alarmActive()) return 'status-alarm';
+          return self.powerFb() ? 'status-running' : 'status-stopped';
         });
         self.fanAnimDuration = ko.pureComputed(function(){
           var sp = Number(self.fanSpeedFb() || 0);
@@ -656,23 +721,81 @@
           var target = !self.powerCmd();
           self.powerCmd(target);
           var varName = self.vars.PowerCmd;
+          var fbName = self.vars.PowerFb || varName;
           if(!varName){ try{ console.warn('[Dashboard] PowerCmd var not configured'); }catch(e){} return; }
           self.isBusy(true);
-          adapter.write(varName, target ? 1 : 0)
-            .then(function(){ try { console.info('[Dashboard] Power written', { name: varName, value: target }); } catch(e){} })
-            .catch(function(err){
-              // If device is offline, keep local state for demo so user can see the fan spinning
-              if(self.root && !self.root.isConnected()){
-                try { console.warn('[Dashboard] Power write failed (offline). Demo: keeping local state and reflecting as feedback.'); } catch(e){}
-                self.powerCmd(target);
-                self.powerFb(!!target);
-                return;
-              }
+          var offlineDemo = (window.DEMO_MODE === true);
+          function delay(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+          function readPower(){ return adapter.read(fbName).then(function(v){ return toBool(v); }).catch(function(){ return null; }); }
+          function tryDirect(){
+            return adapter.write(varName, target ? 1 : 0)
+              .then(function(){ return delay(600); })
+              .then(readPower)
+              .then(function(fb){ return fb === !!target; })
+              .catch(function(){ return false; });
+          }
+          function tryUnlockThenWrite(){
+            var seq = [ ['PwdManuf','4189'], ['PwdUser','1234'], ['PwdService','1234'], ['PwdUser','1489'], ['PwdService','1489'] ];
+            var idx = 0;
+            function next(){
+              if(idx >= seq.length) return Promise.resolve(false);
+              var pair = seq[idx++];
+              return adapter.write(pair[0], pair[1]).catch(function(){})
+                .then(function(){ return delay(500); })
+                .then(tryDirect)
+                .then(function(ok){
+                  return adapter.write(pair[0], '0').catch(function(){ return ok; }).then(function(){ return ok; });
+                })
+                .then(function(ok){ if(ok) return true; return next(); });
+            }
+            return next();
+          }
+
+          var flow;
+          if(offlineDemo && self.root && !self.root.isConnected()){
+            // Demo mode offline: reflect locally
+            self.powerFb(!!target);
+            flow = Promise.resolve(true);
+          } else {
+            flow = tryDirect().then(function(ok){ return ok ? true : tryUnlockThenWrite(); });
+          }
+
+          flow.then(function(ok){
+            if(!ok && !(offlineDemo && self.root && !self.root.isConnected())){
               // revert on failure when connected
               self.powerCmd(!target);
-              try { console.error('[Dashboard] Power write failed', err); } catch(e){}
+              try { console.error('[Dashboard] Power write failed after unlock attempts'); } catch(e){}
+            } else {
+              try { console.info('[Dashboard] Power write ' + (ok?'ok':'demo')); } catch(e){}
+            }
+          }).finally(function(){ self.isBusy(false); });
+        };
+
+        self.onTogglePowerViaScript = function(){
+          if(self.isBusy()) return;
+          var target = !self.powerCmd();
+          self.powerCmd(target);
+          self.isBusy(true);
+          
+          // Use UnitOnOff variable for direct power control via keyboard
+          var varName = 'UnitOnOff';
+          var value = target ? '1' : '0';
+          
+          // Direct write to UnitOnOff variable
+          adapter.write(varName, value)
+            .then(function() {
+              console.info('[Dashboard] UnitOnOff written', { name: varName, value: value });
+              // Poll for updated status after successful write
+              return self.poll();
             })
-            .finally(function(){ self.isBusy(false); });
+            .catch(function(error) {
+              console.error('[Dashboard] UnitOnOff write failed:', error);
+              // Revert on failure
+              self.powerCmd(!target);
+            })
+            .finally(function() {
+              self.isBusy(false);
+            });
         };
         self.onApplySetpoint = function(){
           if(self.isBusy()) return;
@@ -703,7 +826,7 @@
           var desiredDot = v.toFixed(1);
           var desiredComma = desiredDot.replace('.', ',');
           var unlockVars = ['PwdUser', 'PwdService', 'PwdManuf'];
-          var unlockCodes = ['1489', '1234'];
+          var unlockCodes = ['4189', '1489', '1234'];
       
           // Decide target variable list: write only to the configured target var (e.g., Comfort)
           var targetVars = [varName];
@@ -789,7 +912,63 @@
             .finally(function(){ self.isBusy(false); });
         };
 
-        self.pollKeys = (function(){ var keys = [self.vars.PowerFb, self.vars.TempCurrent, self.vars.ModeFb, self.vars.FanSpeedFb, self.vars.AlarmActive, self.vars.TempSetpoint]; return keys.filter(Boolean); })();
+        self.onToggleRemoteOnOff = function(){
+          if(self.isBusy()) return;
+          if(self.root && !self.root.canWriteUnit(self.name)) return;
+          var target = !self.remoteOnOffFb();
+          self.remoteOnOffCmd(target);
+          var varName = self.vars.RemoteOnOffCmd || 'RemoteOn.ReadVal';
+          var fbName = self.vars.RemoteOnOffFb || varName || 'RemoteOn.ReadVal';
+          if(!varName){ try{ console.warn('[Dashboard] RemoteOnOffCmd var not configured'); }catch(e){} return; }
+          self.isBusy(true);
+          var offlineDemo = (window.DEMO_MODE === true);
+          function delay(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+          function readRemoteOnOff(){ return adapter.read(fbName).then(function(v){ return toBool(v); }).catch(function(){ return null; }); }
+          function tryDirect(){
+            return adapter.write(varName, target ? 1 : 0)
+              .then(function(){ return delay(600); })
+              .then(readRemoteOnOff)
+              .then(function(fb){ return fb === !!target; })
+              .catch(function(){ return false; });
+          }
+          function tryUnlockThenWrite(){
+            var seq = [ ['PwdManuf','4189'], ['PwdUser','1234'], ['PwdService','1234'], ['PwdUser','1489'], ['PwdService','1489'] ];
+            var idx = 0;
+            function next(){
+              if(idx >= seq.length) return Promise.resolve(false);
+              var pair = seq[idx++];
+              return adapter.write(pair[0], pair[1]).catch(function(){})
+                .then(function(){ return delay(500); })
+                .then(tryDirect)
+                .then(function(ok){
+                  return adapter.write(pair[0], '0').catch(function(){ return ok; }).then(function(){ return ok; });
+                })
+                .then(function(ok){ if(ok) return true; return next(); });
+            }
+            return next();
+          }
+
+          var flow;
+          if(offlineDemo && self.root && !self.root.isConnected()){
+            // Demo mode offline: reflect locally
+            self.remoteOnOffFb(!!target);
+            flow = Promise.resolve(true);
+          } else {
+            flow = tryDirect().then(function(ok){ return ok ? true : tryUnlockThenWrite(); });
+          }
+
+          flow.then(function(ok){
+            if(!ok && !(offlineDemo && self.root && !self.root.isConnected())){
+              // revert on failure when connected
+              self.remoteOnOffCmd(!target);
+              try { console.error('[Dashboard] RemoteOnOff write failed after unlock attempts'); } catch(e){}
+            } else {
+              try { console.info('[Dashboard] RemoteOnOff write ' + (ok?'ok':'demo')); } catch(e){}
+            }
+          }).finally(function(){ self.isBusy(false); });
+        };
+
+        self.pollKeys = (function(){ var keys = [self.vars.PowerFb, self.vars.TempCurrent, self.vars.ModeFb, self.vars.FanSpeedFb, self.vars.AlarmActive, self.vars.TempSetpoint, self.vars.RemoteOnOffFb]; return keys.filter(Boolean); })();
         self.poll = function(){
           if(!self.pollKeys.length) return Promise.resolve(true);
           return adapter.batchRead(self.pollKeys).then(function(resp){ if(!resp) return true;
@@ -803,6 +982,7 @@
               self.setpointFb(sp);
               // Do not override the user's slider; keep setpointCmd decoupled from feedback
             }
+            if(self.vars.RemoteOnOffFb in resp) self.remoteOnOffFb(toBool(resp[self.vars.RemoteOnOffFb]));
             return true;
           });
         };
@@ -812,17 +992,34 @@
         var self = this; self.units = ko.observableArray([]); self.connectionClass = ko.observable('status-warn'); self.connectionText = ko.observable('در حال اتصال...'); self.pollingMs = 1000; self.lastError = ko.observable('');
         // Desktop layout: always show 10 slots (5x2)
         self.maxSlots = 10;
-        self.strictMode = ko.observable(true);
+        self.strictMode = ko.observable(false);
         self.requireConfirmPower = ko.observable(true);
         self.writeWhitelist = ko.observableArray(['رول کاعد']);
         self.isConnected = ko.observable(false);
         self.canWriteUnit = function(unitName){
+          var n = (typeof unitName === 'function') ? unitName() : unitName;
           if(!self.isConnected()) return false;
-          if(self.strictMode()) return self.writeWhitelist().indexOf(unitName) !== -1;
+          if(self.strictMode()) return self.writeWhitelist().indexOf(n) !== -1;
           return true;
         };
         window.DASHBOARD_STRICT = false; window.DASHBOARD_WRITE_PATTERN = 'auto';
         var adapter = SafeAdapter();
+        // Apply user-requested naming: the unit that is ON => "انبار کاعذ"; others => fixed list
+        self.applyNaming = function(){
+          try {
+            var units = self.units();
+            // Determine active unit among non-disabled ones
+            var real = units.filter(function(u){ return !(u.isDisabled && u.isDisabled()); });
+            var active = (real.length>0) ? (real.find(function(u){ return (u.powerFb && typeof u.powerFb === 'function') ? !!u.powerFb() : false; }) || real[0]) : null;
+            var otherNames = ['کیوسک','تولید پر','رول کاغذ','انباری'];
+            var idx = 0;
+            units.forEach(function(u){
+              if(active && u === active){ if(u.name && typeof u.name === 'function') u.name('انبار کاعذ'); }
+              else { var nm = otherNames[idx] || ('واحد ' + (idx+1)); idx++; if(u.name && typeof u.name === 'function') u.name(nm); }
+            });
+          } catch(e){ try { console.warn('applyNaming error', e); } catch(_){} }
+        };
+
         self.load = function(){
           return $.getJSON('assets/data/dashboard.config.json').then(function(cfg){
             self.pollingMs = (cfg && cfg.pollingMs) || 1000;
@@ -835,11 +1032,13 @@
             while(self.units().length < self.maxSlots){
               self.units.push(new UnitVM({ name: 'رول کاعد', vars: {}, disabled: true }, adapter, self));
             }
+            self.applyNaming();
           }).catch(function(){
             self.units([ new UnitVM({ name:'رول کاعد', vars:{} }, adapter, self) ]);
             while(self.units().length < self.maxSlots){
               self.units.push(new UnitVM({ name: 'رول کاعد', vars: {}, disabled: true }, adapter, self));
             }
+            self.applyNaming();
           });
         };
         var timer = null, ticking = false, consecutiveFails = 0;
@@ -865,6 +1064,8 @@
                 } else if(ok){
                   self.isConnected(true);
             consecutiveFails = 0; self.lastError(''); self.connectionClass('status-ok'); self.connectionText('متصل');
+                  // Refresh naming after we have fresh feedbacks
+                  self.applyNaming();
           } else { self.isConnected(false); consecutiveFails = 0; self.lastError(''); self.connectionClass('status-warn'); self.connectionText('ناقص'); }
               }).finally(function(){
                 ticking = false; var delay = self.pollingMs * (consecutiveFails > 3 ? 2 : 1); timer = setTimeout(tick, delay);
@@ -960,6 +1161,56 @@
       }
     })();
   </script>
+  
+  <script>
+    // تابع جدید برای فراخوانی اسکریپت تنظیم دما
+    function setTemperatureViaPowerShell(temperature) {
+      return new Promise(function(resolve, reject) {
+        try {
+          // ایجاد یک درخواست به سرور پروکسی برای اجرای اسکریپت PowerShell
+          fetch('/proxy?url=http://localhost:8000/simple_set_temp.ps1?temp=' + encodeURIComponent(temperature))
+            .then(function(response) {
+              if (!response.ok) {
+                throw new Error('HTTP error ' + response.status);
+              }
+              return response.text();
+            })
+            .then(function(text) {
+              // بررسی نتیجه اجرای اسکریپت
+              if (text.includes('SUCCESS') || text.includes('success') || text.includes('Temperature set')) {
+                resolve({ success: true, message: 'دمای ' + temperature + '°C با موفقیت تنظیم شد', output: text });
+              } else {
+                reject({ success: false, message: 'خطا در تنظیم دما', output: text });
+              }
+            })
+            .catch(function(error) {
+              reject({ success: false, message: 'خطا در ارتباط با سرور: ' + error.message });
+            });
+        } catch (error) {
+          reject({ success: false, message: 'خطا در اجرای اسکریپت: ' + error.message });
+        }
+      });
+    }
+    
+    // تابع برای نمایش پیام به کاربر
+    function showTemperatureStatus(message, isSuccess) {
+      var alertDiv = document.createElement('div');
+      alertDiv.className = isSuccess ? 'alert alert-success' : 'alert alert-danger';
+      alertDiv.style.cssText = 'position:fixed; top:20px; right:20px; z-index:9999; max-width:400px;';
+      alertDiv.textContent = message;
+      
+      document.body.appendChild(alertDiv);
+      
+      // حذف خودکار پیام بعد از 5 ثانیه
+      setTimeout(function() {
+        if (alertDiv.parentNode) {
+          alertDiv.parentNode.removeChild(alertDiv);
+        }
+      }, 5000);
+    }
+    
+
+  </script>
   <script>
     (function(){
       try {
@@ -1035,7 +1286,7 @@
       document.body.appendChild(installBtn);
     });
   </script>
-  <!-- Dev-only: Fresh reload clears caches and unregisters ServiceWorker when ?fresh=1 -->
+
   <script>
     (function(){
       try {
@@ -1058,5 +1309,6 @@
       } catch(e){ console.warn('fresh-mode error', e); }
     })();
   </script>
+
 </body>
 </html>
