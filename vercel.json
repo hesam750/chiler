@@ -7,6 +7,10 @@
     {
       "source": "/proxy",
       "destination": "/api/proxy"
+    },
+    {
+      "source": "/src/dashboard",
+      "destination": "/dashboard.html"
     }
   ],
   "headers": [
