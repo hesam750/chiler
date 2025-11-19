@@ -3,6 +3,15 @@
   "builds": [
     { "src": "api/**/*.js", "use": "@vercel/node" }
   ],
+  "redirects": [
+    { "source": "/src/login.html", "destination": "/login", "permanent": true },
+    { "source": "/src/login", "destination": "/login", "permanent": true },
+    { "source": "/src/dashboard", "destination": "/dashboard", "permanent": true },
+    { "source": "/src/dashboard.html", "destination": "/dashboard", "permanent": true },
+    { "source": "/src/admin.html", "destination": "/admin", "permanent": true },
+    { "source": "/src/index.html", "destination": "/", "permanent": true },
+    { "source": "/src", "destination": "/", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/api/admin/config", "destination": "/api/admin-config.js" },
     { "source": "/api/proxy", "destination": "/api/proxy.js" },
@@ -10,8 +19,9 @@
     { "source": "/api/auth/login", "destination": "/api/auth-login.js" },
     { "source": "/api/auth/logout", "destination": "/api/auth-logout.js" },
     { "source": "/api/auth/me", "destination": "/api/auth-me.js" },
-    { "source": "/admin", "destination": "/src/admin.html" },
-    { "source": "/dashboard", "destination": "/src/dashboard.html" },
+    { "source": "/admin", "destination": "/api/auth-gate.js?dest=/src/admin.html&role=admin&next=/admin" },
+    { "source": "/dashboard", "destination": "/api/auth-gate.js?dest=/src/dashboard.html&next=/dashboard" },
+    { "source": "/login", "destination": "/src/login.html" },
     { "source": "/", "destination": "/src/index.html" }
   ]
 }

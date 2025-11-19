@@ -4,10 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
-  <title>ورود به برنامه</title>
+  <title>سیستم سرمایشی فناپ</title>
   <link rel="icon" href="./favicon.ico">
   <link rel="stylesheet" href="./styles/bootstrap.min.css" />
   <link rel="stylesheet" href="./fonts/persian-fonts.css" />
+  <div></div>
   <style>
     :root{ --bg:#0b1220; --card:#0f172a; --fg:#e5e7eb; --muted:#94a3b8; --border:#1f2937; --primary:#2563eb; --primary-700:#1d4ed8; --danger:#ef4444; }
     html, body { height: 100%; }
@@ -125,8 +126,8 @@
   </div>
   <div class="wrap">
     <div class="card">
-      <div class="brand">ورود به برنامه</div>
-      <p class="muted">برای دسترسی به سامانه لطفاً وارد شوید.</p>
+      <div class="brand">سیستم سرمایشی</div>
+      <!-- <p class="muted">برای دسترسی به سامانه لطفاً وارد شوید.</p> -->
       <div class="form-group" style="margin-top:10px;">
         <div class="form-label">نام کاربری</div>
         <input id="login-username" type="text" class="form-input" placeholder="نام کاربری سازمانی" autocomplete="username" aria-label="نام کاربری" />
@@ -139,8 +140,8 @@
       <div class="actions">
         <button id="login-submit" class="btn btn-primary">ورود</button>
       </div>
-      <div class="muted" style="margin-top:12px;">در صورت مشکل در ورود، با سرپرست سیستم تماس بگیرید.</div>
-    </div>
+      <!-- <div class="muted" style="margin-top:12px;">در صورت مشکل در ورود، با سرپرست سیستم تماس بگیرید.</div>
+    </div> -->
   </div>
 
   <!-- Fanap logo corner -->
@@ -151,7 +152,16 @@
 
   <script>
     (function(){
+      function getNext(){
+        try {
+          var params = new URLSearchParams(window.location.search || '');
+          var n = params.get('next');
+          return n && n.trim() ? n : null;
+        } catch(_) { return null; }
+      }
       function redirectByRole(role){
+        var next = getNext();
+        if(next){ window.location.replace(next); return; }
         if(role === 'admin') window.location.replace('/src/admin.html');
         else window.location.replace('/src/dashboard.html');
       }
@@ -178,7 +188,7 @@
       }
 
       document.addEventListener('DOMContentLoaded', function(){
-        // اگر قبلاً وارد شده، مستقیم هدایت شو
+        // اگر قبلاً وارد شده، مستقیم هدایت شو (با احترام به next)
         checkAuth().then(function(info){ if(info && info.authenticated){ var role = info.user && info.user.role || 'user'; redirectByRole(role); } });
         var btn = document.getElementById('login-submit');
         if(btn) btn.addEventListener('click', submitLogin);

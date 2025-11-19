@@ -324,7 +324,7 @@
               }; })
             };
             fetch('/api/admin/config', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) })
-              .then(function(r){ if(r.status===401){ alert('برای ذخیره لازم است وارد شوید'); window.location.replace('/src/login.html'); throw new Error('Unauthorized'); } if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+              .then(function(r){ if(r.status===401){ alert('برای ذخیره لازم است وارد شوید'); window.location.replace('/login'); throw new Error('Unauthorized'); } if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
               .then(function(){ self.saveStatus('ok'); })
               .catch(function(){ self.saveStatus('err'); })
               .finally(function(){ self.busy(false); });
@@ -344,19 +344,19 @@
 
           self.logout = function(){
             fetch('/api/auth/logout', { method:'POST' })
-              .then(function(){ window.location.replace('/src/login.html'); })
-              .catch(function(){ window.location.replace('/src/login.html'); });
+              .then(function(){ window.location.replace('/login'); })
+              .catch(function(){ window.location.replace('/login'); });
           };
         }
         var vm = new VM();
         ko.applyBindings(vm);
         vm.checkAuth().then(function(){
           if(vm.isAuthenticated() && !vm.isAdmin()){
-            window.location.href = '/src/dashboard.html?config=/src/assets/admin/config.json';
+            window.location.href = '/dashboard?config=/src/assets/admin/config.json';
             return;
           }
           if(!vm.isAuthenticated()){
-            window.location.replace('/src/login.html');
+            window.location.replace('/login');
             return;
           }
           vm.load();

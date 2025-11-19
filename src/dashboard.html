@@ -1731,7 +1731,7 @@
             .then(function(){ /* پس از ورود موفق، نیازی به ریدایرکت نیست؛ داشبورد آماده است */ })
             .catch(function(e){ alert('ورود ناموفق: '+ (e && e.message ? e.message : e)); });
         };
-        self.logout = function(){ fetch('/api/auth/logout', { method:'POST' }).then(function(){ window.location.replace('/src/login.html'); }).catch(function(){ window.location.replace('/src/login.html'); }); };
+        self.logout = function(){ fetch('/api/auth/logout', { method:'POST' }).then(function(){ window.location.replace('/login'); }).catch(function(){ window.location.replace('/login'); }); };
         self.canWriteUnit = function(unitName){
           var n = (typeof unitName === 'function') ? unitName() : unitName;
           if(!self.isConnected()) return false;
@@ -1880,7 +1880,7 @@
         } catch(e){ window.DEMO_MODE = false; }
         ko.applyBindings(vm);
         // بررسی احراز هویت و انتقال به صفحه ورود در صورت نیاز
-        vm.checkAuth().then(function(){ if(!vm.isAuthenticated()){ window.location.replace('/src/login.html'); } });
+        vm.checkAuth().then(function(){ if(!vm.isAuthenticated()){ window.location.replace('/login'); } });
         vm.load().then(function(){ vm.startPolling();
         // Demo mode: always seed visual states when ?demo=1 (regardless of connectivity)
         if(window.DEMO_MODE){
