@@ -22,7 +22,8 @@
     { "source": "/admin", "destination": "/api/auth-gate.js?dest=/src/admin.html&role=admin&next=/admin" },
     { "source": "/dashboard", "destination": "/api/auth-gate.js?dest=/src/dashboard.html&next=/dashboard" },
     { "source": "/login", "destination": "/src/login.html" },
-    { "source": "/", "destination": "/src/index.html" }
+    { "source": "/", "destination": "/src/index.html" },
+    { "source": "/src/(.*)", "destination": "/src/$1" }
   ],
   "headers": [
     {
