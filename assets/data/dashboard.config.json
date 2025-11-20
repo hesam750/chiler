@@ -1,0 +1,20 @@
+{
+  "deviceUrl": "http://169.254.61.68/commissioning/getvar.csv",
+  "pollingMs": 3000,
+  "units": [
+    {
+      "name": "رول کاعد",
+      "vars": {
+        "PowerCmd": "UnitOnOff",
+        "PowerFb": "CurrUnitStatus",
+        "RemoteOnOffCmd": "RemoteOnOffCmd",
+        "RemoteOnOffFb": "RemoteOnOff",
+        "TempCurrent": "SupplyTemp.ReadVal",
+        "TempSetpoint": "UnitSetP.RoomTempSetP.Comfort",
+        "FanSpeedFb": "MB_Devices.FanElectricalInfo_ZA_1.Modulation",
+        "AlarmActive": "Al03_PWRP_1.Active"
+      },
+      "setpoint": { "min": 10, "max": 30, "step": 0.5 }
+    }
+  ]
+}

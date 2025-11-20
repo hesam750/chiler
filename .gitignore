@@ -119,3 +119,9 @@ temp/
 *.debug
 *.log
 proxy.log
+# Temp and local artifacts (from origin/main)
+out.tmp
+log.text
+vars_dump_*.htm
+getvar_dump*.csv
+test_setpoint.log
