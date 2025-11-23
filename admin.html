@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>پنل ادمین | Chiller Dashboard</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="fanap.png">
+  <link rel="stylesheet" href="css/bootstrap.min.css" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/rtl.css" />
+  <style>
+    body { background: var(--bg); color: var(--text); font-family: 'IRANSansX','Vazirmatn',Tahoma,Arial,sans-serif; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background: var(--topbar-bg); border-bottom:1px solid var(--topbar-border); }
+    .brand { display:flex; align-items:center; gap:10px; }
+    .brand img { height:26px; }
+    .muted { color: var(--muted); font-size:12px; }
+    .container { padding:16px; }
+    .grid { display:grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+    .card { background: var(--card-bg); border:1px solid var(--card-border); border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,.35); }
+    .card-header { padding:10px 12px; border-bottom:1px solid var(--card-border); display:flex; align-items:center; justify-content:space-between; }
+    .card-body { padding:12px; }
+    .span-12 { grid-column: span 12; }
+    .span-6 { grid-column: span 6; }
+    .span-4 { grid-column: span 4; }
+    .span-3 { grid-column: span 3; }
+    .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
+    @media (max-width: 992px) { .span-6 { grid-column: span 12; } .span-4 { grid-column: span 12; } .span-3 { grid-column: span 12; } }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/knockout@3.5.1/build/output/knockout-latest.js"></script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <img src="fanap.png" alt="Fanap" />
+      <strong>پنل ادمین</strong>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <a class="btn btn-default btn-sm" href="/dashboard">داشبورد</a>
+      <button id="logout" class="btn btn-default btn-sm" type="button">خروج</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="grid">
+      <div class="card span-12">
+        <div class="card-header">
+          <div><strong>افزودن چیلر</strong></div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; align-items:end;">
+            <div>
+              <label class="muted">نام</label>
+              <input id="newName" class="form-control" type="text" placeholder="مثلاً چیلر ۱">
+            </div>
+            <div>
+              <label class="muted">آدرس IP</label>
+              <input id="newIp" class="form-control" type="text" placeholder="مثلاً 192.168.1.10">
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <label class="muted" style="margin:0;">فعال</label>
+              <input id="newActive" type="checkbox" checked>
+            </div>
+            <div>
+              <button id="addBtn" class="btn btn-primary" type="button">افزودن</button>
+              <button id="refreshBtn" class="btn btn-default" type="button" style="margin-right:8px;">تازه‌سازی</button>
+            </div>
+          </div>
+          <div id="msg" class="muted" style="margin-top:8px; min-height:20px;"></div>
+        </div>
+      </div>
+
+      <div class="span-12">
+        <h4 style="margin:12px 0;">چیلرها</h4>
+        <div id="list" class="cards" data-bind="foreach: chillers">
+          <div class="card" data-bind="css: { 'card--disabled': !active() }">
+            <div class="card-header">
+              <div>
+                <strong data-bind="text: name"></strong>
+                <span class="muted" style="margin-right:8px;" data-bind="text: ip"></span>
+              </div>
+              <div>
+                <span class="badge-state" data-bind="text: active() ? 'فعال' : 'غیرفعال', css: active() ? 'badge-running' : 'badge-stopped'"></span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="display:grid; gap:8px;">
+                <input class="form-control" type="text" data-bind="value: name" placeholder="نام">
+                <input class="form-control" type="text" data-bind="value: ip" placeholder="آدرس IP">
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <label class="muted" style="margin:0;">فعال</label>
+                  <input type="checkbox" data-bind="checked: active">
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn btn-primary btn-sm" type="button" data-bind="click: function(){ $root.updateChiller(id, name(), ip(), active()); }">ذخیره</button>
+                  <button class="btn btn-danger btn-sm" type="button" data-bind="click: function(){ $root.deleteChiller(id); }">حذف</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      function redirectLogin(){ location.replace('/login'); }
+      fetch('/api/me').then(function(r){ return r.json(); }).then(function(j){ var role = String((j&&j.role)||'guest'); if(role!=='admin') redirectLogin(); }).catch(redirectLogin);
+      var vm = { chillers: ko.observableArray([]), updateChiller: function(id, name, ip, active){ var payload = { name:name, ip:ip, active:!!active }; fetch('/api/chillers/' + encodeURIComponent(id), { method:'PUT', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); }).then(function(j){ var idx = vm.chillers().findIndex(function(x){ return x.id===id; }); if(idx>-1){ vm.chillers()[idx].name(j.item.name); vm.chillers()[idx].ip(j.item.ip); vm.chillers()[idx].active(!!j.item.active); vm.chillers.valueHasMutated(); setMsg('ذخیره شد'); } }).catch(function(){ setMsg('خطا در ذخیره'); }); }, deleteChiller: function(id){ if(!confirm('حذف شود؟')) return; fetch('/api/chillers/' + encodeURIComponent(id), { method:'DELETE' }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); }).then(function(){ vm.chillers.remove(function(x){ return x.id===id; }); setMsg('حذف شد'); }).catch(function(){ setMsg('خطا در حذف'); }); } };
+      ko.applyBindings(vm);
+      function setMsg(t){ var el = document.getElementById('msg'); if(el){ el.textContent = String(t||''); }}
+      function load(){ fetch('/api/chillers').then(function(r){ return r.json(); }).then(function(j){ var arr = (j&&j.items)||[]; vm.chillers(arr.map(function(c){ return { id: c.id, name: ko.observable(c.name||''), ip: ko.observable(c.ip||''), active: ko.observable(!!c.active) }; })); setMsg('لیست به‌روز شد'); }).catch(function(){ setMsg('خطا در دریافت لیست'); }); }
+      load();
+      var addBtn = document.getElementById('addBtn'); var refreshBtn = document.getElementById('refreshBtn'); var newName = document.getElementById('newName'); var newIp = document.getElementById('newIp'); var newActive = document.getElementById('newActive'); if(addBtn){ addBtn.addEventListener('click', function(){ var payload = { name: String(newName.value||''), ip: String(newIp.value||''), active: !!newActive.checked }; setMsg('در حال افزودن...'); fetch('/api/chillers', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) }).then(function(r){ if(!r.ok) { if(r.status===403) throw new Error('forbidden'); throw new Error('x'); } return r.json(); }).then(function(j){ var c=j.item; vm.chillers.push({ id: c.id, name: ko.observable(c.name||''), ip: ko.observable(c.ip||''), active: ko.observable(!!c.active) }); newName.value=''; newIp.value=''; newActive.checked=true; setMsg('افزوده شد'); }).catch(function(e){ setMsg(e && e.message==='forbidden' ? 'فقط ادمین مجاز است' : 'خطا در افزودن'); }); }); }
+      if(refreshBtn){ refreshBtn.addEventListener('click', load); }
+      var logout = document.getElementById('logout'); if(logout){ logout.addEventListener('click', function(){ fetch('/api/logout', { method:'POST' }).then(function(){ location.replace('/login'); }); }); }
+    })();
+  </script>
+</body>
+</html>

@@ -190,6 +190,11 @@
           تم: <span id="theme-label">تاریک</span>
         </button>
       </div>
+      <div class="group">
+        <button class="btn btn-default btn-sm btn-header" type="button" data-bind="visible: role()==='admin', click: function(){ window.location.href='/admin'; }">مدیریت</button>
+        <button class="btn btn-sm btn-header" type="button" data-bind="visible: role()!=='guest', click: logout">خروج</button>
+        <button class="btn btn-default btn-sm btn-header" type="button" data-bind="click: loadChillers">تازه‌سازی چیلرها</button>
+      </div>
     </div>
   </div>
 
@@ -197,6 +202,11 @@
     <div class="alert alert-danger" style="display:none" data-bind="visible: lastError, text: lastError"></div>
   </div>
 
+  
+
+  
+
+  
   
 
   <div class="cards" data-bind="foreach: units">
@@ -267,6 +277,9 @@
         </div>
         <div class="controls">
           <div class="control">
+            <div class="muted">IP: <strong data-bind="text: ip"></strong></div>
+          </div>
+          <div class="control">
             <h6>روشن/خاموش</h6>
             <div class="toggle">
               <label class="switch">
@@ -304,6 +317,8 @@
       </div>
       </div>
   </div>
+
+  
 
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/jquery@3.6.4/dist/jquery.min.js'"></script>
   <script src="https://cdn.jsdelivr.net/npm/knockout@3.5.1/build/output/knockout-latest.js" onerror="this.onerror=null;this.src='https://unpkg.com/knockout@3.5.1/build/output/knockout-latest.js'"></script>
@@ -566,6 +581,7 @@
 
       function UnitVM(cfg, adapter, root){
         var self = this; cfg = cfg||{}; self.name = cfg.name || 'Unit'; self.vars = cfg.vars || {}; self.root = root || null; self.isDisabled = ko.observable(!!cfg.disabled);
+        self.ip = ko.observable(cfg.ip || '');
         self.powerFb = ko.observable(false); self.tempCurrent = ko.observable(0).extend({ rateLimit: 250 }); self.modeFb = ko.observable('auto'); self.fanSpeedFb = ko.observable(0).extend({ rateLimit: 250 }); self.alarmActive = ko.observable(false);
 
         self.isBusy = ko.observable(false);
@@ -778,6 +794,12 @@
         self.requireConfirmPower = ko.observable(true);
         self.writeWhitelist = ko.observableArray(['رول کاعد']);
         self.isConnected = ko.observable(false);
+        self.role = ko.observable('guest');
+        self.chillers = ko.observableArray([]);
+        self._chillersLast = 0;
+        self.loadChillers = function(){
+          return fetch('/api/chillers').then(function(r){ return r.json(); }).then(function(j){ var arr = (j && j.items) || []; self.chillers(arr.map(function(c){ return { id: c.id, name: ko.observable(c.name || ''), ip: ko.observable(c.ip || ''), active: ko.observable(!!c.active) }; })); }).catch(function(){});
+        };
         self.canWriteUnit = function(unitName){
           if(!self.isConnected()) return false;
           if(self.strictMode()) return self.writeWhitelist().indexOf(unitName) !== -1;
@@ -785,6 +807,7 @@
         };
         window.DASHBOARD_STRICT = false; window.DASHBOARD_WRITE_PATTERN = 'auto';
         var adapter = SafeAdapter();
+        self.logout = function(){ fetch('/api/logout', { method:'POST' }).then(function(){ window.location.replace('/login'); }); };
         self.load = function(){
           return $.getJSON('assets/data/dashboard.config.json').then(function(cfg){
             self.pollingMs = (cfg && cfg.pollingMs) || 1000;
@@ -792,15 +815,23 @@
             var devUrl = qDev || (cfg && cfg.deviceUrl);
             if(devUrl){ adapter = SafeAdapter(devUrl); }
             var arr = (cfg && cfg.units) || [];
-            self.units(arr.map(function(u){ return new UnitVM(u, adapter, self); }));
-            while(self.units().length < self.maxSlots){
-              self.units.push(new UnitVM({ name: 'رول کاعد', vars: {}, disabled: true }, adapter, self));
-            }
+            var baseUnit = arr[0] || { name:'واحد', vars:{}, setpoint:{ min:10, max:30, step:0.5 } };
+            return self.loadChillers().then(function(){
+              var names = [];
+              var units = self.chillers().filter(function(c){ return !!c.active(); }).map(function(c){
+                var ip = String(c.ip()||'');
+                var name = String(c.name()||baseUnit.name||'واحد');
+                names.push(name);
+                var url = ip ? ('http://' + ip + '/getvar.csv') : devUrl;
+                var adp = SafeAdapter(url);
+                return new UnitVM({ name:name, vars: baseUnit.vars, setpoint: baseUnit.setpoint, ip: ip }, adp, self);
+              });
+              self.units(units);
+              self.writeWhitelist(names);
+              self.strictMode(false);
+            });
           }).catch(function(){
             self.units([ new UnitVM({ name:'رول کاعد', vars:{} }, adapter, self) ]);
-            while(self.units().length < self.maxSlots){
-              self.units.push(new UnitVM({ name: 'رول کاعد', vars: {}, disabled: true }, adapter, self));
-            }
           });
         };
         var timer = null, ticking = false, consecutiveFails = 0;
@@ -812,9 +843,8 @@
             if(isPaused){ timer = setTimeout(tick, Math.max(self.pollingMs*3, 3000)); return; }
             if(ticking){ timer = setTimeout(tick, self.pollingMs); return; }
             ticking = true;
-            adapter.read('__probe__').catch(function(){}).finally(function(){
-              var polls = self.units().map(function(u){ return u.poll(); });
-              Promise.allSettled(polls).then(function(results){
+            var polls = self.units().map(function(u){ return u.poll(); });
+            Promise.allSettled(polls).then(function(results){
                 var ok = results.some(function(r){ return r.status==='fulfilled'; });
                 var allRejected = results.every(function(r){ return r.status==='rejected'; });
                 if(allRejected){
@@ -826,10 +856,10 @@
                   self.isConnected(true);
                   consecutiveFails = 0; self.lastError(''); self.connectionClass('status-ok'); self.connectionText('متصل');
                 } else { self.isConnected(false); consecutiveFails = 0; self.lastError(''); self.connectionClass('status-warn'); self.connectionText('ناقص'); }
+                if((Date.now() - self._chillersLast) > 10000){ self._chillersLast = Date.now(); self.loadChillers(); }
               }).finally(function(){
                 ticking = false; var delay = self.pollingMs * (consecutiveFails > 3 ? 2 : 1); timer = setTimeout(tick, delay);
               });
-            });
           }
           tick();
         };
@@ -846,6 +876,7 @@
           window.DEMO_MODE = (m && m[1] === '1') ? true : false;
         } catch(e){ window.DEMO_MODE = false; }
         ko.applyBindings(vm);
+        fetch('/api/me').then(function(r){ return r.json(); }).then(function(j){ var role = String((j&&j.role)||'guest'); if(role==='guest') { window.location.replace('/login'); return; } vm.role(role); vm.loadChillers(); }).catch(function(){ window.location.replace('/login'); });
         vm.load().then(function(){ vm.startPolling();
         if(window.DEMO_MODE){
           setTimeout(function(){
