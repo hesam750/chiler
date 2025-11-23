@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#007bff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0056b3;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="192" height="192" rx="24" fill="url(#bg)"/>
+  
+  <!-- Chiller Icon -->
+  <g transform="translate(48, 48)">
+    <!-- Main unit body -->
+    <rect x="12" y="20" width="72" height="56" rx="8" fill="#ffffff" opacity="0.9"/>
+    
+    <!-- Fan circles -->
+    <circle cx="32" cy="40" r="12" fill="none" stroke="#007bff" stroke-width="2"/>
+    <circle cx="64" cy="40" r="12" fill="none" stroke="#007bff" stroke-width="2"/>
+    
+    <!-- Fan blades -->
+    <g transform="translate(32, 40)">
+      <path d="M-8,0 L8,0 M0,-8 L0,8 M-6,-6 L6,6 M-6,6 L6,-6" stroke="#007bff" stroke-width="1.5"/>
+    </g>
+    <g transform="translate(64, 40)">
+      <path d="M-8,0 L8,0 M0,-8 L0,8 M-6,-6 L6,6 M-6,6 L6,-6" stroke="#007bff" stroke-width="1.5"/>
+    </g>
+    
+    <!-- Control panel -->
+    <rect x="20" y="52" width="56" height="16" rx="4" fill="#f8f9fa"/>
+    <circle cx="28" cy="60" r="2" fill="#28a745"/>
+    <rect x="36" y="58" width="32" height="4" rx="2" fill="#6c757d"/>
+    
+    <!-- Pipes -->
+    <rect x="4" y="36" width="8" height="8" rx="4" fill="#6c757d"/>
+    <rect x="84" y="36" width="8" height="8" rx="4" fill="#6c757d"/>
+    
+    <!-- Temperature indicator -->
+    <text x="48" y="90" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff">CHILL</text>
+  </g>
+</svg>

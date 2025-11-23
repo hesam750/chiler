@@ -1,0 +1,36 @@
+/* RTL and Persian typography overrides */
+html, body { direction: rtl; }
+body { text-align: right; font-family: Tahoma, "Segoe UI", Arial, sans-serif; }
+
+/* Topbar layout: brand on the right, actions on the left */
+.topbar { flex-direction: row-reverse; }
+.brand { flex-direction: row-reverse; }
+.top-actions { flex-direction: row-reverse; }
+.top-actions .meta { flex-direction: row-reverse; }
+
+/* Card header: name right, state badge left */
+.card-header { flex-direction: row-reverse; }
+.card-header > div:first-child { text-align: right; }
+.card-header > div:last-child { text-align: left; }
+
+/* Controls right-aligned and readable */
+.controls { text-align: right; }
+.control h6 { font-size: 13px; }
+.toggle { flex-direction: row-reverse; }
+.setpoint { flex-direction: row-reverse; }
+.value-big { text-align: left; }
+
+.muted { text-align: right; }
+
+/* Badges and status chips spacing in RTL */
+.badge-state { margin-left: 0; margin-right: 6px; }
+.status-dot { margin-right: 0; margin-left: 8px; }
+
+/* Tables and lists defaults (if present) */
+table, th, td { text-align: right; }
+
+/* Buttons keep their placement, reduce extra letter spacing */
+.btn { letter-spacing: 0; }
+
+/* Fan stays centered; no RTL-specific change required */
+.fan { direction: ltr; }
