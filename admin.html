@@ -6,10 +6,12 @@
   <title>پنل ادمین | Chiller Dashboard</title>
   <link rel="icon" type="image/png" sizes="192x192" href="fanap.png">
   <link rel="stylesheet" href="css/bootstrap.min.css" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/theme.css" />
   <link rel="stylesheet" href="css/rtl.css" />
   <style>
-    body { background: var(--bg); color: var(--text); font-family: 'IRANSansX','Vazirmatn',Tahoma,Arial,sans-serif; }
+    body { background: var(--bg); color: var(--text); font-family: 'Vazirmatn',Tahoma,Arial,sans-serif; }
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background: var(--topbar-bg); border-bottom:1px solid var(--topbar-border); }
     .brand { display:flex; align-items:center; gap:10px; }
     .brand img { height:26px; }
@@ -105,16 +107,19 @@
 
   <script>
     (function(){
+      var API_BASE = '';
+      function loadCfg(){ if(window.__cfg) return Promise.resolve(window.__cfg); return fetch('/assets/data/dashboard.config.json').then(function(r){ return r.json(); }).then(function(j){ window.__cfg=j||{}; API_BASE=(j&&j.apiBaseUrl)||''; return window.__cfg; }).catch(function(){ window.__cfg={}; API_BASE=''; return window.__cfg; }); }
+      function api(p){ return (API_BASE||'') + p; }
       function redirectLogin(){ location.replace('/login'); }
-      fetch('/api/me').then(function(r){ return r.json(); }).then(function(j){ var role = String((j&&j.role)||'guest'); if(role!=='admin') redirectLogin(); }).catch(redirectLogin);
+      loadCfg().then(function(){ return fetch(api('/api/me')); }).then(function(r){ return r.json(); }).then(function(j){ var role = String((j&&j.role)||'guest'); if(role!=='admin') redirectLogin(); }).catch(redirectLogin);
       var vm = { chillers: ko.observableArray([]), updateChiller: function(id, name, ip, active){ var payload = { name:name, ip:ip, active:!!active }; fetch('/api/chillers/' + encodeURIComponent(id), { method:'PUT', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); }).then(function(j){ var idx = vm.chillers().findIndex(function(x){ return x.id===id; }); if(idx>-1){ vm.chillers()[idx].name(j.item.name); vm.chillers()[idx].ip(j.item.ip); vm.chillers()[idx].active(!!j.item.active); vm.chillers.valueHasMutated(); setMsg('ذخیره شد'); } }).catch(function(){ setMsg('خطا در ذخیره'); }); }, deleteChiller: function(id){ if(!confirm('حذف شود؟')) return; fetch('/api/chillers/' + encodeURIComponent(id), { method:'DELETE' }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); }).then(function(){ vm.chillers.remove(function(x){ return x.id===id; }); setMsg('حذف شد'); }).catch(function(){ setMsg('خطا در حذف'); }); } };
       ko.applyBindings(vm);
       function setMsg(t){ var el = document.getElementById('msg'); if(el){ el.textContent = String(t||''); }}
-      function load(){ fetch('/api/chillers').then(function(r){ return r.json(); }).then(function(j){ var arr = (j&&j.items)||[]; vm.chillers(arr.map(function(c){ return { id: c.id, name: ko.observable(c.name||''), ip: ko.observable(c.ip||''), active: ko.observable(!!c.active) }; })); setMsg('لیست به‌روز شد'); }).catch(function(){ setMsg('خطا در دریافت لیست'); }); }
+      function load(){ loadCfg().then(function(){ return fetch(api('/api/chillers')); }).then(function(r){ return r.json(); }).then(function(j){ var arr = (j&&j.items)||[]; vm.chillers(arr.map(function(c){ return { id: c.id, name: ko.observable(c.name||''), ip: ko.observable(c.ip||''), active: ko.observable(!!c.active) }; })); setMsg('لیست به‌روز شد'); }).catch(function(){ setMsg('خطا در دریافت لیست'); }); }
       load();
-      var addBtn = document.getElementById('addBtn'); var refreshBtn = document.getElementById('refreshBtn'); var newName = document.getElementById('newName'); var newIp = document.getElementById('newIp'); var newActive = document.getElementById('newActive'); if(addBtn){ addBtn.addEventListener('click', function(){ var payload = { name: String(newName.value||''), ip: String(newIp.value||''), active: !!newActive.checked }; setMsg('در حال افزودن...'); fetch('/api/chillers', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) }).then(function(r){ if(!r.ok) { if(r.status===403) throw new Error('forbidden'); throw new Error('x'); } return r.json(); }).then(function(j){ var c=j.item; vm.chillers.push({ id: c.id, name: ko.observable(c.name||''), ip: ko.observable(c.ip||''), active: ko.observable(!!c.active) }); newName.value=''; newIp.value=''; newActive.checked=true; setMsg('افزوده شد'); }).catch(function(e){ setMsg(e && e.message==='forbidden' ? 'فقط ادمین مجاز است' : 'خطا در افزودن'); }); }); }
+      var addBtn = document.getElementById('addBtn'); var refreshBtn = document.getElementById('refreshBtn'); var newName = document.getElementById('newName'); var newIp = document.getElementById('newIp'); var newActive = document.getElementById('newActive'); if(addBtn){ addBtn.addEventListener('click', function(){ var payload = { name: String(newName.value||''), ip: String(newIp.value||''), active: !!newActive.checked }; setMsg('در حال افزودن...'); loadCfg().then(function(){ return fetch(api('/api/chillers'), { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) }); }).then(function(r){ if(!r.ok) { if(r.status===403) throw new Error('forbidden'); throw new Error('x'); } return r.json(); }).then(function(j){ var c=j.item; vm.chillers.push({ id: c.id, name: ko.observable(c.name||''), ip: ko.observable(c.ip||''), active: ko.observable(!!c.active) }); newName.value=''; newIp.value=''; newActive.checked=true; setMsg('افزوده شد'); }).catch(function(e){ setMsg(e && e.message==='forbidden' ? 'فقط ادمین مجاز است' : 'خطا در افزودن'); }); }); }
       if(refreshBtn){ refreshBtn.addEventListener('click', load); }
-      var logout = document.getElementById('logout'); if(logout){ logout.addEventListener('click', function(){ fetch('/api/logout', { method:'POST' }).then(function(){ location.replace('/login'); }); }); }
+      var logout = document.getElementById('logout'); if(logout){ logout.addEventListener('click', function(){ loadCfg().then(function(){ return fetch(api('/api/logout'), { method:'POST' }); }).then(function(){ location.replace('/login'); }); }); }
     })();
   </script>
 </body>

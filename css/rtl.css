@@ -1,6 +1,6 @@
 /* RTL and Persian typography overrides */
 html, body { direction: rtl; }
-body { text-align: right; font-family: Tahoma, "Segoe UI", Arial, sans-serif; }
+body { text-align: right; font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; }
 
 /* Topbar layout: brand on the right, actions on the left */
 .topbar { flex-direction: row-reverse; }

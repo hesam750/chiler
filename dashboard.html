@@ -22,12 +22,11 @@
   <link rel="stylesheet" href="css/base-page.css" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="preconnect" href="https://cdn.fontcdn.ir" crossorigin>
-  <link rel="stylesheet" href="https://cdn.fontcdn.ir/Font/Persian/IRANSansX/IRANSansX.css">
+  
   <link rel="stylesheet" href="css/theme.css" />
   <link rel="stylesheet" href="css/rtl.css" />
   <style>
-    body { background: #0f141a; color: #e6edf3; font-family: 'IRANSansX', 'Vazirmatn', Tahoma, Arial, sans-serif; }
+    body { background: #0f141a; color: #e6edf3; font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; }
     :root { --fanSize: clamp(120px, 12vw, 180px); --gap: 12px; }
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background: linear-gradient(180deg, #0e1728 0%, #0c1424 100%); border-bottom:1px solid #243040; box-shadow: 0 6px 18px rgba(0,0,0,.35); position: sticky; top:0; z-index: 1000; backdrop-filter: saturate(1.2) blur(4px); }
     .brand { display:flex; align-items:center; gap:10px; }
@@ -41,8 +40,10 @@
     .top-actions .group { display:flex; align-items:center; gap:10px; }
     .top-actions .muted { font-size:12px; }
     .btn { border-radius:10px; }
-    .btn-theme { padding:6px 10px; border-radius:10px; }
-    .btn-header { padding:6px 12px; border-radius:10px; }
+    .btn-theme { padding:8px 12px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid #2b3647; color:#cde9ff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+    .btn-theme:hover { filter: brightness(1.05); background: rgba(255,255,255,.08); }
+    .btn-header { padding:8px 12px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid #2b3647; color:#cde9ff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+    .btn-header:hover { filter: brightness(1.05); background: rgba(255,255,255,.08); }
     .status-chip { display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid transparent; cursor:default; }
     .status-chip::before { content:""; width:8px; height:8px; border-radius:50%; display:inline-block; }
     .status-chip.status-ok { background: rgba(46,204,113,.12); color:#2ecc71; border-color: rgba(46,204,113,.35); }
@@ -193,7 +194,6 @@
       <div class="group">
         <button class="btn btn-default btn-sm btn-header" type="button" data-bind="visible: role()==='admin', click: function(){ window.location.href='/admin'; }">مدیریت</button>
         <button class="btn btn-sm btn-header" type="button" data-bind="visible: role()!=='guest', click: logout">خروج</button>
-        <button class="btn btn-default btn-sm btn-header" type="button" data-bind="click: loadChillers">تازه‌سازی چیلرها</button>
       </div>
     </div>
   </div>
@@ -798,7 +798,7 @@
         self.chillers = ko.observableArray([]);
         self._chillersLast = 0;
         self.loadChillers = function(){
-          return fetch('/api/chillers').then(function(r){ return r.json(); }).then(function(j){ var arr = (j && j.items) || []; self.chillers(arr.map(function(c){ return { id: c.id, name: ko.observable(c.name || ''), ip: ko.observable(c.ip || ''), active: ko.observable(!!c.active) }; })); }).catch(function(){});
+          return loadCfg().then(function(){ return fetch(api('/api/chillers')); }).then(function(r){ return r.json(); }).then(function(j){ var arr = (j && j.items) || []; self.chillers(arr.map(function(c){ return { id: c.id, name: ko.observable(c.name || ''), ip: ko.observable(c.ip || ''), active: ko.observable(!!c.active) }; })); }).catch(function(){});
         };
         self.canWriteUnit = function(unitName){
           if(!self.isConnected()) return false;
@@ -807,7 +807,7 @@
         };
         window.DASHBOARD_STRICT = false; window.DASHBOARD_WRITE_PATTERN = 'auto';
         var adapter = SafeAdapter();
-        self.logout = function(){ fetch('/api/logout', { method:'POST' }).then(function(){ window.location.replace('/login'); }); };
+        self.logout = function(){ loadCfg().then(function(){ return fetch(api('/api/logout'), { method:'POST' }); }).then(function(){ window.location.replace('/login'); }); };
         self.load = function(){
           return $.getJSON('assets/data/dashboard.config.json').then(function(cfg){
             self.pollingMs = (cfg && cfg.pollingMs) || 1000;
@@ -870,13 +870,16 @@
         if(!window.ko || !ko.observable){
           throw new Error('Knockout.js not loaded');
         }
+        var API_BASE = '';
+        function loadCfg(){ if(window.__cfg) return Promise.resolve(window.__cfg); return fetch('assets/data/dashboard.config.json').then(function(r){ return r.json(); }).then(function(j){ window.__cfg=j||{}; API_BASE=(j&&j.apiBaseUrl)||''; return window.__cfg; }).catch(function(){ window.__cfg={}; API_BASE=''; return window.__cfg; }); }
+        function api(p){ return (API_BASE||'') + p; }
         var vm = new RootVM();
         try {
           var m = (location.search || '').match(/[?&]demo=(\d+)/i);
           window.DEMO_MODE = (m && m[1] === '1') ? true : false;
         } catch(e){ window.DEMO_MODE = false; }
         ko.applyBindings(vm);
-        fetch('/api/me').then(function(r){ return r.json(); }).then(function(j){ var role = String((j&&j.role)||'guest'); if(role==='guest') { window.location.replace('/login'); return; } vm.role(role); vm.loadChillers(); }).catch(function(){ window.location.replace('/login'); });
+        loadCfg().then(function(){ return fetch(api('/api/me')); }).then(function(r){ return r.json(); }).then(function(j){ var role = String((j&&j.role)||'guest'); if(role==='guest') { window.location.replace('/login'); return; } vm.role(role); vm.loadChillers(); }).catch(function(){ window.location.replace('/login'); });
         vm.load().then(function(){ vm.startPolling();
         if(window.DEMO_MODE){
           setTimeout(function(){
