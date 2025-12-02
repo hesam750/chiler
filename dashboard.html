@@ -42,8 +42,15 @@
     .btn { border-radius:10px; }
     .btn-theme { padding:8px 12px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid #2b3647; color:#cde9ff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
     .btn-theme:hover { filter: brightness(1.05); background: rgba(255,255,255,.08); }
+    [data-theme='dark'] #theme-toggle:hover { color: #ffffff; }
+    [data-theme='light'] #theme-toggle { color: #ffffff; }
+    [data-theme='light'] #theme-toggle:hover { color: var(--topbar-text); }
+    [data-theme='light'] #btn-open-pgd:hover { color: var(--topbar-text); }
+    [data-theme='light'] #logout, [data-theme='light'] #admin-btn { color: #000000; }
+    [data-theme='light'] #logout:hover, [data-theme='light'] #admin-btn:hover { color: #000000; }
     .btn-header { padding:8px 12px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid #2b3647; color:#cde9ff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
     .btn-header:hover { filter: brightness(1.05); background: rgba(255,255,255,.08); }
+    [data-theme='dark'] .btn-header:hover { color: #ffffff; }
     .status-chip { display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; border:1px solid transparent; cursor:default; }
     .status-chip::before { content:""; width:8px; height:8px; border-radius:50%; display:inline-block; }
     .status-chip.status-ok { background: rgba(46,204,113,.12); color:#2ecc71; border-color: rgba(46,204,113,.35); }
@@ -192,8 +199,8 @@
         </button>
       </div>
       <div class="group">
-        <button class="btn btn-default btn-sm btn-header" type="button" data-bind="visible: role()==='admin', click: function(){ window.location.href='/admin'; }">مدیریت</button>
-        <button class="btn btn-sm btn-header" type="button" data-bind="visible: role()!=='guest', click: logout">خروج</button>
+        <button id="admin-btn" class="btn btn-default btn-sm btn-header" type="button" data-bind="visible: role()==='admin', click: function(){ window.location.href='/admin'; }">مدیریت</button>
+        <button id="logout" class="btn btn-sm btn-header" type="button" data-bind="visible: role()!=='guest', click: logout">خروج</button>
       </div>
     </div>
   </div>
@@ -243,36 +250,32 @@
                 <stop offset="0%" stop-color="#757c84" />
                 <stop offset="100%" stop-color="#444a50" />
               </linearGradient>
+              <clipPath id="fanClip">
+                <circle cx="60" cy="60" r="52" />
+              </clipPath>
             </defs>
 
             <circle cx="60" cy="60" r="56" fill="url(#shroudGrad)" stroke="#2f3337" stroke-width="4" />
             <circle cx="60" cy="60" r="50" fill="none" stroke="#1f2327" stroke-width="1" opacity="0.6" />
 
-            <g class="blade" data-bind="style: { animationDuration: fanAnimDuration, filter: fanBlurStyle }">
+            <g class="blade" clip-path="url(#fanClip)" data-bind="style: { animationDuration: fanAnimDuration, filter: fanBlurStyle }">
               <g transform="translate(60,60)">
-                <g id="blade6" fill="url(#bladeMetal)">
-                  <path d="M 2 -18 C 8 -30, 22 -40, 34 -42 C 45 -44, 50 -42, 52 -38 C 54 -33, 49 -27, 42 -24 C 33 -20, 22 -15, 14 -9 C 6 -3, 0 4, -2 10 C -4 15, -6 18, -10 18 C -14 18, -16 14, -16 10 C -16 2, -10 -8, 2 -18 Z" stroke="#2d3237" stroke-width="0.6" />
-                  <path d="M 4 -16 C 12 -26, 24 -36, 36 -38" fill="none" stroke="url(#edgeHighlight)" stroke-width="1" opacity="0.55" />
+                <g transform="scale(0.80)">
+                  <g id="blade6" fill="url(#bladeMetal)">
+                    <path d="M 2 -18 C 8 -30, 22 -40, 34 -42 C 45 -44, 50 -42, 52 -38 C 54 -33, 49 -27, 42 -24 C 33 -20, 22 -15, 14 -9 C 6 -3, 0 4, -2 10 C -4 15, -6 18, -10 18 C -14 18, -16 14, -16 10 C -16 2, -10 -8, 2 -18 Z" />
+                  </g>
+                  <use href="#blade6" transform="rotate(0)" />
+                  <use href="#blade6" transform="rotate(60)" />
+                  <use href="#blade6" transform="rotate(120)" />
+                  <use href="#blade6" transform="rotate(180)" />
+                  <use href="#blade6" transform="rotate(240)" />
+                  <use href="#blade6" transform="rotate(300)" />
                 </g>
-                <use href="#blade6" transform="rotate(0)" />
-                <use href="#blade6" transform="rotate(60)" />
-                <use href="#blade6" transform="rotate(120)" />
-                <use href="#blade6" transform="rotate(180)" />
-                <use href="#blade6" transform="rotate(240)" />
-                <use href="#blade6" transform="rotate(300)" />
               </g>
             </g>
 
-            <circle cx="60" cy="60" r="11" fill="url(#hubMetal)" stroke="#3b4147" stroke-width="0.9" />
+            <circle cx="60" cy="60" r="12" fill="url(#hubMetal)" stroke="#3b4147" stroke-width="0.9" />
             <circle cx="60" cy="60" r="4" fill="#343a40" />
-            <g fill="#666b72" stroke="#2d3237" stroke-width="0.5">
-              <circle cx="60" cy="12" r="2" />
-              <circle cx="60" cy="12" r="2" transform="rotate(60 60 60)" />
-              <circle cx="60" cy="12" r="2" transform="rotate(120 60 60)" />
-              <circle cx="60" cy="12" r="2" transform="rotate(180 60 60)" />
-              <circle cx="60" cy="12" r="2" transform="rotate(240 60 60)" />
-              <circle cx="60" cy="12" r="2" transform="rotate(300 60 60)" />
-            </g>
           </svg>
         </div>
         <div class="controls">
@@ -311,10 +314,7 @@
 
         </div>
       </div>
-      <div class="footer">
-        <span data-bind="visible: alarmActive">هشدار فعال</span>
-        <span data-bind="visible: !alarmActive()">بدون هشدار</span>
-      </div>
+      
       </div>
   </div>
 

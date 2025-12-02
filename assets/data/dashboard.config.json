@@ -1,5 +1,5 @@
 {
-  "deviceUrl": "http://169.254.61.68/getvar.csv",
+  "deviceUrl": "https://assist-nutrition-disabled-architects.trycloudflare.com/pgd/getvar.csv",
   "pollingMs": 3000,
   "units": [
     {
@@ -8,7 +8,7 @@
         "PowerCmd": "SystemStatus.Ctrl",
         "PowerFb": "SystemStatus.Ctrl",
         "TempCurrent": "SupplyTemp.ReadVal",
-        "TempSetpoint": "UnitSetP.RoomTempSetP.Comfort",
+        "TempSetpoint": "CurrRoomTempSetP_Val",
         "FanSpeedFb": "MB_Devices.FanElectricalInfo_ZA_1.Modulation",
         "AlarmActive": "Al03_PWRP_1.Active"
       },
@@ -21,15 +21,15 @@
   ],
   "chillers": [
     {
-      "id": "ch1",
-      "name": "چیلر ۱",
-      "ip": "169.254.61.68",
+      "id": "7be014a326c39d81",
+      "name": "رول کاغذ",
+      "ip": "192.256.25.25",
       "active": true
     },
     {
-      "id": "9b91ea6d156f9af9",
-      "name": "قلقبب",
-      "ip": "169.254.61.61",
+      "id": "ec2c70bbeb29eaa5",
+      "name": "THT",
+      "ip": "169.256.25.45",
       "active": true
     }
   ]
