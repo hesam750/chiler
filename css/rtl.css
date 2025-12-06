@@ -17,7 +17,9 @@ body { text-align: right; font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; }
 .controls { text-align: right; }
 .control h6 { font-size: 13px; }
 .toggle { flex-direction: row-reverse; }
+.toggle.toggle--power { flex-direction: row; }
 .setpoint { flex-direction: row-reverse; }
+.setpoint input[type=range]{ direction: ltr; }
 .value-big { text-align: left; }
 
 .muted { text-align: right; }

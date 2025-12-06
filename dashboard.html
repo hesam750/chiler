@@ -138,9 +138,9 @@
       --topbar-bg: #0e1728;
       --topbar-border: #243040;
       --topbar-text: #e6edf3;
-      --card-bg: #141b24;
-      --card-border: #243040;
-      --panel-bg: #101620;
+      --card-bg: #172233;
+      --card-border: #2b3647;
+      --panel-bg: #121a27;
       --panel-border: #243040;
       --heading: #c9d1d9;
       --muted: #8b949e;
@@ -179,6 +179,21 @@
     .badge-running { background:#2ecc71; color:#0f2418; }
     .badge-stopped { background:#95a5a6; color:#1d232a; }
     .badge-alarm { background:#e74c3c; color:#ffffff; }
+    .inline { display:flex; align-items:baseline; gap:8px; white-space:nowrap; }
+    .temp-inline .inline-label { font-weight:700; color: var(--heading); }
+    .temp-inline .inline-value { font-weight:700; }
+    .temp-inline .inline-unit { color: var(--muted); font-weight:600; }
+    .toggle { display:flex; align-items:center; justify-content:center; gap:16px; }
+    .switch.power-switch { gap: 14px; }
+    .switch.power-switch .slider { width:64px; height:32px; background: var(--panel-bg); border:1px solid var(--panel-border); }
+    .switch.power-switch .slider::before { width:24px; height:24px; background: var(--card-bg); border:1px solid var(--panel-border); }
+    .switch.power-switch input:checked + .slider { background: rgba(46,204,113,.18); border-color: rgba(46,204,113,.50); }
+    .switch.power-switch input:checked + .slider::before { box-shadow: 0 3px 8px rgba(46,204,113,.40); }
+    .toggle-label { font-weight:700; font-size:13px; }
+    .switch.power-switch input:checked ~ .toggle-label.on { color: var(--success); }
+    .switch.power-switch input:checked ~ .toggle-label.off { color: var(--muted); }
+    .switch.power-switch input:not(:checked) ~ .toggle-label.off { color: var(--danger); }
+    .switch.power-switch input:not(:checked) ~ .toggle-label.on { color: var(--muted); }
   </style>
 </head>
 <body>
@@ -283,33 +298,30 @@
             <div class="muted">IP: <strong data-bind="text: ip"></strong></div>
           </div>
           <div class="control">
-            <h6>روشن/خاموش</h6>
-            <div class="toggle">
-              <label class="switch">
+            <div class="toggle toggle--power">
+              <label class="switch power-switch">
+                <span class="toggle-label off">روشن</span>
                 <input class="form-check-input" type="checkbox" data-bind="checked: powerCmd, enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), click: onTogglePower" id="powerSwitch_1">
                 <span class="slider"></span>
-                <span class="switch-label" data-bind="text: powerFb() ? 'روشن' : 'خاموش'"></span>
+                <span class="toggle-label on">حاموش</span>
               </label>
             </div>
           </div>
 
           <div class="control">
-            <h6>نقطه تنظیم (°C)</h6>
+            <h6>تنظیم دما (°C)</h6>
             <div class="setpoint">
               <button class="btn-step minus" data-bind="enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), attr: { title: '-' + spStep }, click: function(){ var v = parseFloat(setpointCmd()); if(isNaN(v)) v = spMin; var s = +spStep; setpointCmd(Math.min(spMax, Math.max(spMin, +(v - s).toFixed(1)))); }">-</button>
               <input type="range" data-bind="value: setpointCmd, valueUpdate: 'input', enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), attr: {min: spMin, max: spMax, step: spStep}" />
               <button class="btn-step plus" data-bind="enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), attr: { title: '+' + spStep }, click: function(){ var v = parseFloat(setpointCmd()); if(isNaN(v)) v = spMin; var s = +spStep; setpointCmd(Math.min(spMax, Math.max(spMin, +(v + s).toFixed(1)))); }">+</button>
               <span class="value-big" data-bind="text: Number(setpointCmd()).toFixed(1)"></span>
             </div>
-            <div class="muted" style="margin-top:6px; font-size:12px;">اعمال شده:&nbsp;<strong data-bind="text: (setpointFb()==null? '-' : setpointFb())"></strong>&nbsp;°C</div>
+            <div class="muted" style="margin-top:6px; font-size:12px; text-align:center;">دمای تنظیم شده:&nbsp;<strong data-bind="text: (setpointFb()==null? '-' : Number(setpointFb()).toFixed(1))"></strong>&nbsp;°C</div>
             <button type="button" class="btn btn-primary btn-sm" data-bind="click: onApplySetpoint, enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy()">اعمال</button>
           </div>
 
           <div class="control">
-            <h6>دما</h6>
-            <div>
-              <div>فعلی: <strong data-bind="text: tempCurrent"></strong> °C</div>
-            </div>
+            <div class="inline temp-inline"><span class="inline-label">دمای فعلی:</span><span class="inline-value" data-bind="text: tempCurrent"></span><span class="inline-unit">°C</span></div>
           </div>
 
         </div>
@@ -591,7 +603,7 @@
         var spCfg = cfg.setpoint || {};
         self.spMin = (spCfg.min != null ? spCfg.min : 0);
         self.spMax = (spCfg.max != null ? spCfg.max : 50);
-        self.spStep = (spCfg.step != null ? spCfg.step : 0.5);
+        self.spStep = (spCfg.step != null ? spCfg.step : 0.1);
         self.setpointFb = ko.observable(null);
         self.modeCmd = ko.observable('auto');
 
