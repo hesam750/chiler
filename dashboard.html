@@ -637,20 +637,34 @@
           return 'blur(' + px.toFixed(2) + 'px)';
         });
 
-        self.onTogglePower = function(){
+        self.onTogglePower = function(_, ev){
           if(self.isBusy()) return;
-          var target = !self.powerCmd();
+          var target = (ev && ev.target) ? !!ev.target.checked : !self.powerCmd();
           self.powerCmd(target);
           var varName = self.vars.PowerCmd;
           if(!varName){ try{ console.warn('[Dashboard] PowerCmd var not configured'); }catch(e){} return; }
           self.isBusy(true);
           adapter.write(varName, target ? 1 : 0)
-            .then(function(){ try { console.info('[Dashboard] Power written', { name: varName, value: target }); } catch(e){} })
+            .then(function(){
+              try { console.info('[Dashboard] Power written', { name: varName, value: target }); } catch(e){}
+              var mVar = self.vars.ModeCmd;
+              if(!mVar) return;
+              var mVal = target ? 3 : 0;
+              function delay(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+              self.modeCmd(target ? 'comfort' : 'off');
+              return delay(1200).then(function(){ return adapter.write(mVar, mVal); }).then(function(){
+                var fb = self.vars.ModeFb;
+                if(!fb) return;
+                return delay(700).then(function(){ return adapter.read(fb); }).then(function(rv){ var vv=Number(rv); var mm=(vv===0?'off': vv===1?'precomfort': vv===2?'economy': vv===3?'comfort': String(rv)); self.modeFb(mm); });
+              });
+            })
             .catch(function(err){
               if(self.root && !self.root.isConnected()){
                 try { console.warn('[Dashboard] Power write failed (offline). Demo: keeping local state and reflecting as feedback.'); } catch(e){}
                 self.powerCmd(target);
                 self.powerFb(!!target);
+                var mm = target ? 'comfort' : 'off';
+                self.modeFb(mm);
                 return;
               }
               self.powerCmd(!target);
@@ -687,6 +701,14 @@
           var unlockCodes = ['1489', '1234'];
       
           var targetVars = [varName];
+          try {
+            var useModeSpecific = /CurrRoomTempSetP/i.test(varName) || varName === 'CurrRoomTempSetP_Val';
+            if(useModeSpecific){
+              var m = String(self.modeFb()||'comfort').toLowerCase();
+              var cap = (m==='economy'?'Economy': m==='precomfort'?'PreComfort': 'Comfort');
+              targetVars = [ 'UnitSetP.RoomTempSetP.' + cap ];
+            }
+          } catch(e){}
           function delay(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
           function readbackAny(){
             return adapter.read(varName).then(function(rv){
@@ -763,19 +785,35 @@
           var varName = self.vars.ModeCmd;
           if(!varName){ try{ console.warn('[Dashboard] ModeCmd var not configured'); }catch(e){} return; }
           self.isBusy(true);
-          adapter.write(varName, m)
-            .then(function(){ try { console.info('[Dashboard] Mode written', { name: varName, value: m }); } catch(e){} })
+          var offlineDemo = (window.DEMO_MODE === true);
+          if(offlineDemo && self.root && !self.root.isConnected()){
+            self.modeFb(m);
+            self.isBusy(false);
+            return;
+          }
+          function toModeCode(s){ s=String(s||'').toLowerCase(); if(s==='off'||s==='0') return 0; if(s==='precomfort'||s==='pre'||s==='1') return 1; if(s==='economy'||s==='eco'||s==='2') return 2; if(s==='comfort'||s==='3') return 3; return 0; }
+          function readBack(){
+            var fb = self.vars.ModeFb;
+            if(!fb) return Promise.resolve(null);
+            return adapter.read(fb).then(function(rv){ return String(rv||''); }).catch(function(){ return null; });
+          }
+          var mv = toModeCode(m);
+          adapter.write(varName, mv)
+            .then(function(){ return readBack(); })
+            .then(function(val){ if(val!=null){ var vv = Number(val); var mm = (vv===0?'off': vv===1?'precomfort': vv===2?'economy': vv===3?'comfort': String(val)); self.modeFb(mm); } })
+            .then(function(){ try { console.info('[Dashboard] Mode written', { name: varName, value: mv }); } catch(e){} })
             .catch(function(err){ try { console.error('[Dashboard] Mode write failed', err); } catch(e){} })
             .finally(function(){ self.isBusy(false); });
         };
 
         self.pollKeys = (function(){ var keys = [self.vars.PowerFb, self.vars.TempCurrent, self.vars.ModeFb, self.vars.FanSpeedFb, self.vars.AlarmActive, self.vars.TempSetpoint]; return keys.filter(Boolean); })();
         self.poll = function(){
+          if(self.isDisabled()) return Promise.resolve(true);
           if(!self.pollKeys.length) return Promise.resolve(true);
           return adapter.batchRead(self.pollKeys).then(function(resp){ if(!resp) return true;
             if(self.vars.PowerFb in resp) self.powerFb(toBool(resp[self.vars.PowerFb]));
             if(self.vars.TempCurrent in resp) self.tempCurrent(toNum(resp[self.vars.TempCurrent]).toFixed(1));
-            if(self.vars.ModeFb in resp) self.modeFb(String(resp[self.vars.ModeFb]));
+            if(self.vars.ModeFb in resp){ var vv = Number(resp[self.vars.ModeFb]); var mm = (vv===0?'off': vv===1?'precomfort': vv===2?'economy': vv===3?'comfort': String(resp[self.vars.ModeFb])); self.modeFb(mm); }
             if(self.vars.FanSpeedFb in resp) self.fanSpeedFb(toNum(resp[self.vars.FanSpeedFb]||0));
             if(self.vars.AlarmActive in resp) self.alarmActive(toBool(resp[self.vars.AlarmActive]));
             if(self.vars.TempSetpoint in resp){
@@ -818,13 +856,13 @@
             var baseUnit = arr[0] || { name:'واحد', vars:{}, setpoint:{ min:10, max:30, step:0.5 } };
             return self.loadChillers().then(function(){
               var names = [];
-              var units = self.chillers().filter(function(c){ return !!c.active(); }).map(function(c){
+              var units = self.chillers().map(function(c){
                 var ip = String(c.ip()||'');
                 var name = String(c.name()||baseUnit.name||'واحد');
                 names.push(name);
                 var url = ip ? ('http://' + ip + '/getvar.csv') : devUrl;
                 var adp = SafeAdapter(url);
-                return new UnitVM({ name:name, vars: baseUnit.vars, setpoint: baseUnit.setpoint, ip: ip }, adp, self);
+                return new UnitVM({ name:name, vars: baseUnit.vars, setpoint: baseUnit.setpoint, ip: ip, disabled: !c.active() }, adp, self);
               });
               self.units(units);
               self.writeWhitelist(names);
@@ -881,6 +919,13 @@
         ko.applyBindings(vm);
         loadCfg().then(function(){ return fetch(api('/api/me')); }).then(function(r){ return r.json(); }).then(function(j){ var role = String((j&&j.role)||'guest'); if(role==='guest') { window.location.replace('/login'); return; } vm.role(role); vm.loadChillers(); }).catch(function(){ window.location.replace('/login'); });
         vm.load().then(function(){ vm.startPolling();
+        try {
+          var mm = (location.search || '').match(/[?&]mode=([^&]+)/i);
+          if(mm){
+            var desired = decodeURIComponent(mm[1] || '');
+            setTimeout(function(){ try { if(vm.units() && vm.units().length){ vm.units().forEach(function(u){ u.modeCmd(desired); u.onApplyMode(); }); } } catch(e){} }, 500);
+          }
+        } catch(e){}
         if(window.DEMO_MODE){
           setTimeout(function(){
             try {
@@ -971,7 +1016,7 @@
   </script>
   
   <script>
-    if ('serviceWorker' in navigator) {
+    if (false && 'serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js')
           .then(function(registration) {

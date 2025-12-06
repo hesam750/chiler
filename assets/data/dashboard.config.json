@@ -1,5 +1,5 @@
 {
-  "deviceUrl": "https://assist-nutrition-disabled-architects.trycloudflare.com/pgd/getvar.csv",
+  "deviceUrl": "http://169.254.61.68/getvar.csv",
   "pollingMs": 3000,
   "units": [
     {
@@ -9,6 +9,8 @@
         "PowerFb": "SystemStatus.Ctrl",
         "TempCurrent": "SupplyTemp.ReadVal",
         "TempSetpoint": "CurrRoomTempSetP_Val",
+        "ModeCmd": "SetTyp",
+        "ModeFb": "SetTyp",
         "FanSpeedFb": "MB_Devices.FanElectricalInfo_ZA_1.Modulation",
         "AlarmActive": "Al03_PWRP_1.Active"
       },
@@ -22,15 +24,63 @@
   "chillers": [
     {
       "id": "7be014a326c39d81",
-      "name": "رول کاغذ",
-      "ip": "192.256.25.25",
+      "name": "رول کاعد",
+      "ip": "169.254.61.68",
       "active": true
     },
     {
       "id": "ec2c70bbeb29eaa5",
       "name": "THT",
       "ip": "169.256.25.45",
-      "active": true
+      "active": false
+    },
+    {
+      "id": "3be5681159e78ffd",
+      "name": "کیوسک",
+      "ip": "165.252.25.25",
+      "active": false
+    },
+    {
+      "id": "c7e9e746f28d6051",
+      "name": "انبار تولید",
+      "ip": "145.145.25.23",
+      "active": false
+    },
+    {
+      "id": "44d0e2a49ec41450",
+      "name": "تزریق پلاستیک",
+      "ip": "145.258.25.65",
+      "active": false
+    },
+    {
+      "id": "50ed7cacd0f6acbc",
+      "name": "انبار لجستیک",
+      "ip": "125.235.23.25",
+      "active": false
+    },
+    {
+      "id": "2300686e32c8ea13",
+      "name": "SMT",
+      "ip": "169.693.25.45",
+      "active": false
+    },
+    {
+      "id": "7a5179a7049d05d8",
+      "name": "انبار کیوسک",
+      "ip": "125.252.23.23",
+      "active": false
+    },
+    {
+      "id": "7f5640c02a666075",
+      "name": "سالن تولید",
+      "ip": "169.252.23.23",
+      "active": false
+    },
+    {
+      "id": "2e6a3dae14292e1d",
+      "name": "سالن اداری",
+      "ip": "169.255.23.56",
+      "active": false
     }
   ]
 }
