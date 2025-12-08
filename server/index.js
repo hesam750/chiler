@@ -15,7 +15,7 @@ app.use('/proxy', (req, res) => proxy(req, res));
 // Simple auth and CRUD for chillers
 const AUTH_SECRET = process.env.AUTH_SECRET || 'dev-secret';
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'admin@ch.fanap';
 const USER_USER = process.env.USER_USER || 'user';
 const USER_PASS = process.env.USER_PASS || 'user123';
 
@@ -121,6 +121,11 @@ function clearSession(res) {
 function requireAdmin(req, res, next) {
   const s = getSession(req);
   if (s && s.role === 'admin') return next();
+  const wantsHtml = String(req.headers.accept||'').indexOf('text/html') > -1;
+  const isApi = String(req.path||'').startsWith('/api');
+  if (wantsHtml && req.method === 'GET' && !isApi) {
+    return res.redirect('/login');
+  }
   res.status(403).json({ error: 'forbidden' });
 }
 

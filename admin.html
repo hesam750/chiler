@@ -28,6 +28,20 @@
     .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
     .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
     @media (max-width: 992px) { .span-6 { grid-column: span 12; } .span-4 { grid-column: span 12; } .span-3 { grid-column: span 12; } }
+    .card-link { position:relative; display:block; text-decoration:none; color:inherit; border:1px solid var(--card-border); border-radius:14px; box-shadow:0 6px 18px rgba(0,0,0,.30); background: var(--card-bg); overflow:hidden; transition: transform .18s ease, box-shadow .18s ease; }
+    .card-link:hover { transform: translateY(-2px); box-shadow:0 10px 28px rgba(0,0,0,.35); }
+    .card-link::after { content:""; position:absolute; inset:0; border-radius:14px; pointer-events:none; border:1px solid transparent; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0)); }
+    .card-link.disabled { pointer-events:none; opacity:.65; }
+    .card-link .card-body { padding:16px; display:flex; align-items:center; gap:14px; justify-content:space-between; }
+    .pgd-icon { width:40px; height:40px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid var(--card-border); display:flex; align-items:center; justify-content:center; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+    .pgd-icon svg { width:24px; height:24px; opacity:.95; color: var(--accent); }
+    .pgd-title { font-weight:700; font-size:15px; }
+    .pgd-meta { color: var(--muted); font-size:12px; }
+    .pgd-arrow { color: var(--muted); opacity:.85; transition: transform .18s ease; }
+    .card-link:hover .pgd-arrow { transform: translateX(-2px); }
+    .badge-state { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+    .badge-running { background:#2ecc71; color:#0f2418; }
+    .badge-stopped { background:#95a5a6; color:#1d232a; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/knockout@3.5.1/build/output/knockout-latest.js"></script>
@@ -102,6 +116,29 @@
           </div>
         </div>
       </div>
+
+      <div class="span-12">
+        <h4 style="margin:12px 0;">PGD ها</h4>
+        <div class="cards" data-bind="foreach: chillers">
+          <a class="card-link" target="_blank" rel="noopener" data-bind="attr: { href: active() ? $root.pgdUrl(ip()) : '#' }, css: { 'card--disabled': !active(), 'disabled': !active() }">
+            <div class="card-body">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="pgd-icon">
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M3 5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-5l2 2v1H10v-1l2-2H5a2 2 0 01-2-2V5zm2 0h14v10H5V5z"/></svg>
+                </div>
+                <div>
+                  <div class="pgd-title" data-bind="text: name"></div>
+                  <div class="pgd-meta" data-bind="text: 'http://' + ip()"></div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="badge-state" data-bind="text: active() ? 'فعال' : 'غیرفعال', css: active() ? 'badge-running' : 'badge-stopped'"></span>
+                <svg class="pgd-arrow" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="20" height="20"><path d="M10 6l6 6-6 6-1.4-1.4L12.2 12 8.6 7.4z"/></svg>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -112,7 +149,7 @@
       function api(p){ return (API_BASE||'') + p; }
       function redirectLogin(){ location.replace('/login'); }
       loadCfg().then(function(){ return fetch(api('/api/me')); }).then(function(r){ return r.json(); }).then(function(j){ var role = String((j&&j.role)||'guest'); if(role!=='admin') redirectLogin(); }).catch(redirectLogin);
-      var vm = { chillers: ko.observableArray([]), updateChiller: function(id, name, ip, active){ var payload = { name:name, ip:ip, active:!!active }; fetch('/api/chillers/' + encodeURIComponent(id), { method:'PUT', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); }).then(function(j){ var idx = vm.chillers().findIndex(function(x){ return x.id===id; }); if(idx>-1){ vm.chillers()[idx].name(j.item.name); vm.chillers()[idx].ip(j.item.ip); vm.chillers()[idx].active(!!j.item.active); vm.chillers.valueHasMutated(); setMsg('ذخیره شد'); } }).catch(function(){ setMsg('خطا در ذخیره'); }); }, deleteChiller: function(id){ if(!confirm('حذف شود؟')) return; fetch('/api/chillers/' + encodeURIComponent(id), { method:'DELETE' }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); }).then(function(){ vm.chillers.remove(function(x){ return x.id===id; }); setMsg('حذف شد'); }).catch(function(){ setMsg('خطا در حذف'); }); } };
+      var vm = { chillers: ko.observableArray([]), pgdUrl: function(ip){ var s=String(ip||'').trim(); if(!s) return '#'; var base='http://'+s; return base; }, updateChiller: function(id, name, ip, active){ var payload = { name:name, ip:ip, active:!!active }; fetch('/api/chillers/' + encodeURIComponent(id), { method:'PUT', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); }).then(function(j){ var idx = vm.chillers().findIndex(function(x){ return x.id===id; }); if(idx>-1){ vm.chillers()[idx].name(j.item.name); vm.chillers()[idx].ip(j.item.ip); vm.chillers()[idx].active(!!j.item.active); vm.chillers.valueHasMutated(); setMsg('ذخیره شد'); } }).catch(function(){ setMsg('خطا در ذخیره'); }); }, deleteChiller: function(id){ if(!confirm('حذف شود؟')) return; fetch('/api/chillers/' + encodeURIComponent(id), { method:'DELETE' }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); }).then(function(){ vm.chillers.remove(function(x){ return x.id===id; }); setMsg('حذف شد'); }).catch(function(){ setMsg('خطا در حذف'); }); } };
       ko.applyBindings(vm);
       function setMsg(t){ var el = document.getElementById('msg'); if(el){ el.textContent = String(t||''); }}
       function load(){ loadCfg().then(function(){ return fetch(api('/api/chillers')); }).then(function(r){ return r.json(); }).then(function(j){ var arr = (j&&j.items)||[]; vm.chillers(arr.map(function(c){ return { id: c.id, name: ko.observable(c.name||''), ip: ko.observable(c.ip||''), active: ko.observable(!!c.active) }; })); setMsg('لیست به‌روز شد'); }).catch(function(){ setMsg('خطا در دریافت لیست'); }); }

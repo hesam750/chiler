@@ -1,6 +1,6 @@
 {
-  "deviceUrl": "http://169.254.61.68/getvar.csv",
-  "pollingMs": 3000,
+  "deviceUrl": "http://10.61.44.53/getvar.csv",
+  "pollingMs": 1000,
   "units": [
     {
       "name": "رول کاعد",
@@ -23,64 +23,58 @@
   ],
   "chillers": [
     {
-      "id": "7be014a326c39d81",
-      "name": "رول کاعد",
-      "ip": "169.254.61.68",
+      "id": "c40c3bd249f20b77",
+      "name": "رول کاغذ",
+      "ip": "10.61.44.52",
       "active": true
     },
     {
-      "id": "ec2c70bbeb29eaa5",
-      "name": "THT",
-      "ip": "169.256.25.45",
-      "active": false
+      "id": "7cc29d12bee67c9e",
+      "name": "smt",
+      "ip": "10.61.44.58",
+      "active": true
     },
     {
-      "id": "3be5681159e78ffd",
-      "name": "کیوسک",
-      "ip": "165.252.25.25",
-      "active": false
+      "id": "a12e05ae41875ed5",
+      "name": "سالن رول",
+      "ip": "10.61.44.55",
+      "active": true
     },
     {
-      "id": "c7e9e746f28d6051",
-      "name": "انبار تولید",
-      "ip": "145.145.25.23",
-      "active": false
+      "id": "39bc1e005e0104b1",
+      "name": "انبار پوز",
+      "ip": "10.61.44.56",
+      "active": true
     },
     {
-      "id": "44d0e2a49ec41450",
-      "name": "تزریق پلاستیک",
-      "ip": "145.258.25.65",
-      "active": false
+      "id": "5079a28dc462a86e",
+      "name": "سالن تزریق",
+      "ip": "10.61.44.54",
+      "active": true
     },
     {
-      "id": "50ed7cacd0f6acbc",
-      "name": "انبار لجستیک",
-      "ip": "125.235.23.25",
-      "active": false
+      "id": "550134f423d6bcbb",
+      "name": "سالن پوز",
+      "ip": "10.61.44.57",
+      "active": true
     },
     {
-      "id": "2300686e32c8ea13",
-      "name": "SMT",
-      "ip": "169.693.25.45",
-      "active": false
+      "id": "58a330bd9bb0f716",
+      "name": "سالن کیوسک",
+      "ip": "10.61.44.53",
+      "active": true
     },
     {
-      "id": "7a5179a7049d05d8",
-      "name": "انبار کیوسک",
-      "ip": "125.252.23.23",
-      "active": false
+      "id": "000f45d151edca3b",
+      "name": "انبار رول",
+      "ip": "10.61.44..52",
+      "active": true
     },
     {
-      "id": "7f5640c02a666075",
-      "name": "سالن تولید",
-      "ip": "169.252.23.23",
-      "active": false
-    },
-    {
-      "id": "2e6a3dae14292e1d",
-      "name": "سالن اداری",
-      "ip": "169.255.23.56",
-      "active": false
+      "id": "22fd95bfc43f1470",
+      "name": "اداری",
+      "ip": "10.61.44.23",
+      "active": true
     }
   ]
 }

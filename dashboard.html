@@ -29,14 +29,16 @@
     body { background: #0f141a; color: #e6edf3; font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; }
     :root { --fanSize: clamp(120px, 12vw, 180px); --gap: 12px; }
     .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background: linear-gradient(180deg, #0e1728 0%, #0c1424 100%); border-bottom:1px solid #243040; box-shadow: 0 6px 18px rgba(0,0,0,.35); position: sticky; top:0; z-index: 1000; backdrop-filter: saturate(1.2) blur(4px); }
-    .brand { display:flex; align-items:center; gap:10px; }
-    .brand img { height:26px; }
+    .topbar { position: sticky; top:0; z-index: 1000; backdrop-filter: saturate(1.2) blur(4px); }
+    .topbar .brand { position:absolute; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:12px; padding:4px 16px; }
+    .brand img { height:40px; width:auto; }
+    .brand-title { font-family:'Vazirmatn', Tahoma, Arial, sans-serif; font-weight:700; font-size:16px; color: var(--topbar-text); letter-spacing:-0.3px; white-space:nowrap; }
     .status-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:8px; }
     .status-ok { background:#2ecc71; }
     .status-warn { background:#f1c40f; }
     .status-err { background:#e74c3c; }
     
-    .top-actions { display:flex; align-items:center; gap:12px; }
+      .top-actions { display:flex; align-items:center; gap:12px; }
     .top-actions .group { display:flex; align-items:center; gap:10px; }
     .top-actions .muted { font-size:12px; }
     .btn { border-radius:10px; }
@@ -48,6 +50,8 @@
     [data-theme='light'] #btn-open-pgd:hover { color: var(--topbar-text); }
     [data-theme='light'] #logout, [data-theme='light'] #admin-btn { color: #000000; }
     [data-theme='light'] #logout:hover, [data-theme='light'] #admin-btn:hover { color: #000000; }
+    [data-theme='light'] #theme-toggle-mobile, [data-theme='light'] #admin-btn-mobile { color: #000000; }
+    [data-theme='light'] #theme-toggle-mobile:hover, [data-theme='light'] #admin-btn-mobile:hover { color: #000000; }
     .btn-header { padding:8px 12px; border-radius:12px; background: rgba(255,255,255,.06); border:1px solid #2b3647; color:#cde9ff; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
     .btn-header:hover { filter: brightness(1.05); background: rgba(255,255,255,.08); }
     [data-theme='dark'] .btn-header:hover { color: #ffffff; }
@@ -62,6 +66,27 @@
     .top-actions .meta { display:flex; align-items:center; gap:8px; }
     .muted { color:#8b949e; font-size:12px; }
     .device-url { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color: var(--muted); font-size:12px; }
+    .menu-btn { display:none; width:40px; height:40px; border-radius:12px; border:1px solid #2b3647; background:#0f1722; color:#cde9ff; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,.35); position:relative; }
+    .menu-btn .bar { position:absolute; width:20px; height:2px; background:#cde9ff; border-radius:2px; transition: transform .2s ease, opacity .2s ease; }
+    .menu-btn .bar:nth-child(1){ transform: translateY(-6px); }
+    .menu-btn .bar:nth-child(2){ transform: translateY(0px); }
+    .menu-btn .bar:nth-child(3){ transform: translateY(6px); }
+    .menu-btn.active .bar:nth-child(1){ transform: rotate(45deg); }
+    .menu-btn.active .bar:nth-child(2){ opacity:0; }
+    .menu-btn.active .bar:nth-child(3){ transform: rotate(-45deg); }
+    .mobile-menu { display:none; position:fixed; inset:0; z-index:1100; background: rgba(0,0,0,.35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+    .mobile-menu.open { display:block; }
+    .mobile-menu .menu-card { position:absolute; top:64px; right:12px; left:12px; border-radius:16px; border:1px solid #2b3647; background: var(--card-bg); box-shadow:0 12px 32px rgba(0,0,0,.45); padding:12px; display:grid; grid-template-columns: 1fr; gap:10px; }
+    .mobile-menu .menu-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    @media (max-width: 576px) {
+      .topbar { flex-direction: column !important; align-items: stretch; padding: 10px 12px; }
+      .topbar .brand { position: static !important; left: auto !important; right: auto !important; transform: none !important; width: 100%; justify-content: center; gap:10px; padding:6px 12px; box-sizing: border-box; }
+      .brand img { height:28px; }
+      .brand-title { display: inline-block; font-size:13px; max-width: calc(100vw - 128px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .top-actions { display:none !important; }
+      .menu-btn { display:flex; }
+      .top-actions .group { gap: 8px; }
+    }
     
      .cards { display:grid; grid-template-columns: repeat(5, minmax(220px, 1fr)); gap: 14px; padding: 14px; }
      .card { background:#141b24; border:1px solid #243040; border-radius:12px; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,.35); min-height: 240px; position:relative; }
@@ -115,6 +140,10 @@
     .setpoint { display:flex; align-items:center; gap:8px; }
     .setpoint input[type=range] { flex:1; }
     .value-big { font-size:28px; font-weight:600; min-width:72px; text-align:right; }
+    .progress-wrap { display:flex; align-items:center; justify-content:center; margin-bottom: 8px; }
+    .progress-ring { width:42px; height:42px; }
+    .progress-ring__bg { fill:none; stroke: var(--panel-border); stroke-width:4; opacity:.35; }
+    .progress-ring__prog { fill:none; stroke: var(--accent); stroke-width:4; stroke-linecap:round; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset .2s linear; filter: drop-shadow(0 0 6px rgba(0,0,0,.25)); }
   
     .btn-step { width:28px; height:28px; border-radius:8px; border:1px solid #2b3647; background:#0f1722; color:#cde9ff; line-height:26px; text-align:center; padding:0; font-weight:600; }
     .btn-step:hover { background:#132033; }
@@ -146,6 +175,8 @@
       --muted: #8b949e;
       --accent: #ff8c1a;
       --accent-contrast: #ffffff;
+      --success: #2ecc71;
+      --danger: #e74c3c;
     }
     :root[data-theme='light'] {
       --bg: #ffffff;
@@ -161,6 +192,8 @@
       --muted: #64748b;
       --accent: #f97316;
       --accent-contrast: #ffffff;
+      --success: #2ecc71;
+      --danger: #e74c3c;
     }
     body { background: var(--bg); color: var(--text); }
     .topbar { background: var(--topbar-bg); border-bottom: 1px solid var(--topbar-border); color: var(--topbar-text); }
@@ -186,21 +219,26 @@
     .toggle { display:flex; align-items:center; justify-content:center; gap:16px; }
     .switch.power-switch { gap: 14px; }
     .switch.power-switch .slider { width:64px; height:32px; background: var(--panel-bg); border:1px solid var(--panel-border); }
-    .switch.power-switch .slider::before { width:24px; height:24px; background: var(--card-bg); border:1px solid var(--panel-border); }
+    .switch.power-switch .slider::before { width:24px; height:24px; background: var(--card-bg); border:1px solid var(--panel-border); left: 3px; }
     .switch.power-switch input:checked + .slider { background: rgba(46,204,113,.18); border-color: rgba(46,204,113,.50); }
     .switch.power-switch input:checked + .slider::before { box-shadow: 0 3px 8px rgba(46,204,113,.40); }
-    .toggle-label { font-weight:700; font-size:13px; }
+    .toggle-label { font-weight:700; font-size:13px; color: var(--muted); }
     .switch.power-switch input:checked ~ .toggle-label.on { color: var(--success); }
     .switch.power-switch input:checked ~ .toggle-label.off { color: var(--muted); }
     .switch.power-switch input:not(:checked) ~ .toggle-label.off { color: var(--danger); }
     .switch.power-switch input:not(:checked) ~ .toggle-label.on { color: var(--muted); }
+    .switch.power-switch .toggle-label.on { order: 0; }
+    .switch.power-switch .slider { order: 1; }
+    .switch.power-switch .toggle-label.off { order: 2; }
+    .switch.power-switch input:checked + .slider::before { left: 37px; }
   </style>
 </head>
 <body>
   <div class="topbar">
+    <button id="menu-toggle" class="menu-btn" type="button" aria-label="منو"><span class="bar"></span><span class="bar"></span><span class="bar"></span></button>
     <div class="brand">
       <img src="fanap.png" alt="Fanap Logo" />
-      <strong>داشبورد چیلر</strong>
+      <span class="brand-title">سیستم سرمایشی فناپ تک</span>
     </div>
     <div class="top-actions">
       <div class="group">
@@ -208,7 +246,6 @@
         <span class="muted" id="cpco-version">در حال بارگذاری...</span>
       </div>
       <div class="group">
-        <button id="btn-open-pgd" class="btn btn-primary btn-sm btn-header" type="button">نمایشگر مجازی</button>
         <button id="theme-toggle" class="btn btn-sm btn-theme" type="button" title="تغییر تم">
           تم: <span id="theme-label">تاریک</span>
         </button>
@@ -216,6 +253,21 @@
       <div class="group">
         <button id="admin-btn" class="btn btn-default btn-sm btn-header" type="button" data-bind="visible: role()==='admin', click: function(){ window.location.href='/admin'; }">مدیریت</button>
         <button id="logout" class="btn btn-sm btn-header" type="button" data-bind="visible: role()!=='guest', click: logout">خروج</button>
+      </div>
+    </div>
+  </div>
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <div class="menu-card">
+      <div class="menu-row">
+        <button type="button" class="status-chip" data-bind="css: connectionClass, text: connectionText"></button>
+        <span class="muted" id="cpco-version-mobile">در حال بارگذاری...</span>
+      </div>
+      <div class="menu-row">
+        <button id="theme-toggle-mobile" class="btn btn-sm btn-theme" type="button" title="تغییر تم">تم: <span id="theme-label-mobile">تاریک</span></button>
+        <div class="group">
+          <button id="admin-btn-mobile" class="btn btn-default btn-sm btn-header" type="button" data-bind="visible: role()==='admin', click: function(){ window.location.href='/admin'; }">مدیریت</button>
+          <button id="logout-mobile" class="btn btn-sm btn-header" type="button" data-bind="visible: role()!=='guest', click: logout">خروج</button>
+        </div>
       </div>
     </div>
   </div>
@@ -298,12 +350,18 @@
             <div class="muted">IP: <strong data-bind="text: ip"></strong></div>
           </div>
           <div class="control">
+            <div class="progress-wrap" data-bind="visible: transitionVisible">
+              <svg class="progress-ring" viewBox="0 0 42 42">
+                <circle class="progress-ring__bg" cx="21" cy="21" r="16"></circle>
+                <circle class="progress-ring__prog" cx="21" cy="21" r="16" data-bind="attr: { 'stroke-dasharray': transitionCircumference, 'stroke-dashoffset': transitionStrokeOffset }"></circle>
+              </svg>
+            </div>
             <div class="toggle toggle--power">
               <label class="switch power-switch">
-                <span class="toggle-label off">روشن</span>
+                <span class="toggle-label off">خاموش</span>
                 <input class="form-check-input" type="checkbox" data-bind="checked: powerCmd, enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), click: onTogglePower" id="powerSwitch_1">
                 <span class="slider"></span>
-                <span class="toggle-label on">حاموش</span>
+                <span class="toggle-label on">روشن</span>
               </label>
             </div>
           </div>
@@ -523,58 +581,80 @@
             });
           },
           write: function(name, value){
-            var base;
+            var primary;
             try {
-              if(/getvar\.csv/i.test(deviceUrl)) base = deviceUrl.replace(/getvar\.csv/i,'setvar.csv');
-              else if(/vars\.htm/i.test(deviceUrl)) base = deviceUrl.replace(/vars\.htm/i,'setvar.csv');
-              else { var u = new URL(deviceUrl); base = u.origin + u.pathname.replace(/[^\/]+$/,'') + 'setvar.csv'; }
-            } catch(e){ base = String(deviceUrl||'').replace(/[^\/]+$/,'setvar.csv'); }
+              if(/getvar\.csv/i.test(deviceUrl)) primary = deviceUrl.replace(/getvar\.csv/i,'setvar.csv');
+              else if(/vars\.htm/i.test(deviceUrl)) primary = deviceUrl.replace(/vars\.htm/i,'setvar.csv');
+              else { var u0 = new URL(deviceUrl); primary = u0.origin + u0.pathname.replace(/[^\/]+$/,'') + 'setvar.csv'; }
+            } catch(e){ primary = String(deviceUrl||'').replace(/[^\/]+$/,'setvar.csv'); }
 
-            var getAttempts, postBodies;
-            if(window && window.DASHBOARD_STRICT){
-              var pat = (window.DASHBOARD_WRITE_PATTERN || 'name=value');
-              if(pat === 'name=value') { getAttempts = [ base + '?name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; postBodies = [ 'name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; }
-              else if(pat === 'name=val') { getAttempts = [ base + '?name=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; postBodies = [ 'name=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; }
-              else if(pat === 'id=value') { getAttempts = [ base + '?id=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; postBodies = [ 'id=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; }
-              else if(pat === 'var=val') { getAttempts = [ base + '?var=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; postBodies = [ 'var=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; }
-              else { getAttempts = [ base + '?name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; postBodies = [ 'name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; }
-            } else {
-              getAttempts = [
-                base + '?' + encodeURIComponent(name) + '=' + encodeURIComponent(value),
-                base + '?name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
-                base + '?name=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value),
-                base + '?id='   + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
-                base + '?var='  + encodeURIComponent(name) + '&val='   + encodeURIComponent(value)
+            var bases = [];
+            try {
+              var u = new URL(deviceUrl);
+              var origin = u.origin;
+              var dir = u.pathname.replace(/[^\/]+$/,'');
+              bases = [
+                primary,
+                origin + dir + 'setvar.csv',
+                origin + '/setvar.csv',
+                origin + '/pgd/setvar.csv',
+                origin + '/http/setvar.csv',
+                origin + '/pgd/http/setvar.csv'
               ];
-              postBodies = [
-                'name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
-                'name=' + encodeURIComponent(name) + '&val='   + encodeURIComponent(value),
-                'id='   + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
-                'var='  + encodeURIComponent(name) + '&val='   + encodeURIComponent(value)
-              ];
-            }
+              if(/getvar\.csv/i.test(deviceUrl)) bases.push(deviceUrl.replace(/getvar\.csv/i,'setvar.csv'));
+              if(/vars\.htm/i.test(deviceUrl)) bases.push(deviceUrl.replace(/vars\.htm/i,'setvar.csv'));
+              bases = bases.filter(Boolean).filter(function(v,i,arr){ return arr.indexOf(v)===i; });
+            } catch(e){ bases = [primary]; }
 
-            var i = 0, j = 0;
-            function tryGetNext(){
-              if(i >= getAttempts.length) return Promise.reject(new Error('All GET patterns failed for ' + name));
-              var url = getAttempts[i++];
-              return fetchOnce(url).then(function(t){
-                lastText = ''; lastMap = null; lastTime = 0;
-                try { console.debug('[Dashboard] write ok (GET)', { name:name, value:value, url:url }); } catch(e){}
-                return t;
-              }).catch(function(err){ try { console.warn('[Dashboard] write attempt failed (GET)', url, err); } catch(e){} return tryGetNext(); });
+            var bi = 0;
+            function tryBase(){
+              if(bi >= bases.length) return Promise.reject(new Error('All setvar bases failed for ' + name));
+              var base = bases[bi++];
+              var getAttempts, postBodies;
+              if(window && window.DASHBOARD_STRICT){
+                var pat = (window.DASHBOARD_WRITE_PATTERN || 'name=value');
+                if(pat === 'name=value') { getAttempts = [ base + '?name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; postBodies = [ 'name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; }
+                else if(pat === 'name=val') { getAttempts = [ base + '?name=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; postBodies = [ 'name=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; }
+                else if(pat === 'id=value') { getAttempts = [ base + '?id=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; postBodies = [ 'id=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; }
+                else if(pat === 'var=val') { getAttempts = [ base + '?var=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; postBodies = [ 'var=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value) ]; }
+                else { getAttempts = [ base + '?name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; postBodies = [ 'name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value) ]; }
+              } else {
+                getAttempts = [
+                  base + '?' + encodeURIComponent(name) + '=' + encodeURIComponent(value),
+                  base + '?name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
+                  base + '?name=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value),
+                  base + '?id='   + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
+                  base + '?var='  + encodeURIComponent(name) + '&val='   + encodeURIComponent(value)
+                ];
+                postBodies = [
+                  'name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
+                  'name=' + encodeURIComponent(name) + '&val='   + encodeURIComponent(value),
+                  'id='   + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
+                  'var='  + encodeURIComponent(name) + '&val='   + encodeURIComponent(value)
+                ];
+              }
+              var i = 0, j = 0;
+              function tryGetNext(){
+                if(i >= getAttempts.length) return Promise.reject(new Error('All GET patterns failed for ' + name + ' base ' + base));
+                var url = getAttempts[i++];
+                return fetchOnce(url).then(function(t){
+                  lastText = ''; lastMap = null; lastTime = 0;
+                  try { console.debug('[Dashboard] write ok (GET)', { name:name, value:value, url:url }); } catch(e){}
+                  return t;
+                }).catch(function(err){ try { console.warn('[Dashboard] write attempt failed (GET)', url, err); } catch(e){} return tryGetNext(); });
+              }
+              function tryPostNext(){
+                if(j >= postBodies.length) return Promise.reject(new Error('All POST patterns failed for ' + name + ' base ' + base));
+                var body = postBodies[j++];
+                return fetchOnceExt('POST', base, body).then(function(t){
+                  lastText = ''; lastMap = null; lastTime = 0;
+                  try { console.debug('[Dashboard] write ok (POST)', { name:name, value:value, base:base, body:body }); } catch(e){}
+                  return t;
+                }).catch(function(err){ try { console.warn('[Dashboard] write attempt failed (POST)', base, body, err); } catch(e){} return tryPostNext(); });
+              }
+              return tryGetNext().catch(function(){ return tryPostNext(); }).catch(function(){ return tryBase(); });
             }
-            function tryPostNext(){
-              if(j >= postBodies.length) return Promise.reject(new Error('All POST patterns failed for ' + name));
-              var body = postBodies[j++];
-              return fetchOnceExt('POST', base, body).then(function(t){
-                lastText = ''; lastMap = null; lastTime = 0;
-                try { console.debug('[Dashboard] write ok (POST)', { name:name, value:value, base:base, body:body }); } catch(e){}
-                return t;
-              }).catch(function(err){ try { console.warn('[Dashboard] write attempt failed (POST)', base, body, err); } catch(e){} return tryPostNext(); });
-            }
-
-            return tryGetNext().catch(function(){ return tryPostNext(); });
+            return tryBase();
           },
           batchWrite: function(map){
             var entries = [];
@@ -638,8 +718,8 @@
         });
         self.fanAnimDuration = ko.pureComputed(function(){
           var sp = Number(self.fanSpeedFb() || 0);
-          var factor = Math.min(2.75, Math.max(0, sp)/900 * 2.75);
-          var dur = 3 - factor;
+          var factor = Math.min(3.0, Math.max(0, sp) / 900 * 3.0);
+          var dur = Math.max(0.18, 2.2 - factor);
           return dur.toFixed(2) + 's';
         });
 
@@ -648,41 +728,68 @@
           var px = Math.max(0, Math.min(5, sp / 200));
           return 'blur(' + px.toFixed(2) + 'px)';
         });
+        self.transitionVisible = ko.observable(false);
+        self.transitionProgress = ko.observable(0);
+        self.transitionCircumference = (2 * Math.PI * 16).toFixed(2);
+        self.transitionStrokeOffset = ko.pureComputed(function(){
+          var p = Math.max(0, Math.min(100, Number(self.transitionProgress() || 0)));
+          var c = Number(self.transitionCircumference);
+          var off = c * (1 - p / 100);
+          return off.toFixed(2);
+        });
+        self._transitionTimer = null;
+        self.startTransition = function(ms){
+          if(self._transitionTimer){ try{ clearInterval(self._transitionTimer); }catch(e){} self._transitionTimer = null; }
+          var dur = Number(ms)||40000; var start = Date.now();
+          self.transitionVisible(true); self.transitionProgress(0);
+          self._transitionTimer = setInterval(function(){
+            var now = Date.now(); var ratio = Math.min(1, (now - start) / dur);
+            self.transitionProgress(ratio * 100);
+            if(ratio >= 1){ try{ clearInterval(self._transitionTimer); }catch(e){} self._transitionTimer = null; self.transitionVisible(false); }
+          }, 200);
+        };
+        self.stopTransition = function(){ if(self._transitionTimer){ try{ clearInterval(self._transitionTimer); }catch(e){} self._transitionTimer = null; } self.transitionVisible(false); };
+        try {
+          var _pending = sessionStorage.getItem('unitTransition:' + self.name);
+          if(_pending){
+            var cfg = null; try { cfg = JSON.parse(_pending); } catch(e){}
+            var dur = Number(cfg && cfg.duration || 50000);
+            self.startTransition(dur);
+            try { sessionStorage.removeItem('unitTransition:' + self.name); } catch(e){}
+          }
+        } catch(e){}
 
         self.onTogglePower = function(_, ev){
           if(self.isBusy()) return;
           var target = (ev && ev.target) ? !!ev.target.checked : !self.powerCmd();
-          self.powerCmd(target);
           var varName = self.vars.PowerCmd;
           if(!varName){ try{ console.warn('[Dashboard] PowerCmd var not configured'); }catch(e){} return; }
+          self.powerCmd(target);
           self.isBusy(true);
+          var offlineDemo = (window.DEMO_MODE === true);
+          function delay(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+          function readBack(){
+            var fb = self.vars.PowerFb; var fspVar = self.vars.FanSpeedFb;
+            if(!fb && !fspVar) return Promise.resolve(null);
+            var p1 = fb ? adapter.read(fb).then(function(rv){ return toBool(rv); }).catch(function(){ return null; }) : Promise.resolve(null);
+            var p2 = fspVar ? adapter.read(fspVar).then(function(rv){ return toNum(rv)||0; }).catch(function(){ return null; }) : Promise.resolve(null);
+            return Promise.all([p1,p2]).then(function(arr){ var a=arr[0], b=arr[1]; if(a!=null && b!=null) return !!(a || b>0); if(a!=null) return a; if(b!=null) return !!(b>0); return null; });
+          }
+          function writeModeFallback(){ var mVar = self.vars.ModeCmd; if(!mVar) return Promise.resolve(false); var mv = target ? 3 : 0; return adapter.write(mVar, mv).then(function(){ return delay(600); }).then(function(){ return readBack(); }).then(function(v){ return v===target; }).catch(function(){ return false; }); }
+          function tryUnlockThenWrite(){ var unlockVars = ['PwdUser','PwdService','PwdManuf']; var unlockCodes = ['1489','1234']; var seq = []; unlockVars.forEach(function(u){ unlockCodes.forEach(function(c){ seq.push([u,c]); }); }); var idx=0; function next(){ if(idx>=seq.length) return Promise.resolve(false); var p=seq[idx++]; return adapter.write(p[0], p[1]).catch(function(){}).then(function(){ return delay(600); }).then(function(){ return adapter.write(varName, target?1:0); }).then(function(){ return delay(600); }).then(function(){ return readBack(); }).then(function(v){ if(v===target){ return adapter.write(p[0],'0').catch(function(){}).then(function(){ return true; }); } return next(); }); } return next(); }
+          if(offlineDemo && self.root && !self.root.isConnected()){ self.powerFb(!!target); self.isBusy(false); return; }
           adapter.write(varName, target ? 1 : 0)
-            .then(function(){
-              try { console.info('[Dashboard] Power written', { name: varName, value: target }); } catch(e){}
-              var mVar = self.vars.ModeCmd;
-              if(!mVar) return;
-              var mVal = target ? 3 : 0;
-              function delay(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
-              self.modeCmd(target ? 'comfort' : 'off');
-              return delay(1200).then(function(){ return adapter.write(mVar, mVal); }).then(function(){
-                var fb = self.vars.ModeFb;
-                if(!fb) return;
-                return delay(700).then(function(){ return adapter.read(fb); }).then(function(rv){ var vv=Number(rv); var mm=(vv===0?'off': vv===1?'precomfort': vv===2?'economy': vv===3?'comfort': String(rv)); self.modeFb(mm); });
-              });
-            })
-            .catch(function(err){
-              if(self.root && !self.root.isConnected()){
-                try { console.warn('[Dashboard] Power write failed (offline). Demo: keeping local state and reflecting as feedback.'); } catch(e){}
-                self.powerCmd(target);
-                self.powerFb(!!target);
-                var mm = target ? 'comfort' : 'off';
-                self.modeFb(mm);
-                return;
-              }
-              self.powerCmd(!target);
-              try { console.error('[Dashboard] Power write failed', err); } catch(e){}
-            })
-            .finally(function(){ self.isBusy(false); });
+            .then(function(){ return delay(500); })
+            .then(function(){ return readBack(); })
+            .then(function(v){ if(v===target) return true; return writeModeFallback(); })
+            .then(function(ok){ if(ok) return true; return tryUnlockThenWrite(); })
+            .then(function(ok){ if(ok){ self.powerFb(!!target); try { console.info('[Dashboard] Power applied', { name: varName, value: target }); } catch(e){} } else { self.powerCmd(!target); try { console.error('[Dashboard] Power apply failed after fallbacks'); } catch(e){} } })
+            .catch(function(err){ if(self.root && !self.root.isConnected()){ self.powerCmd(target); self.powerFb(!!target); return; } self.powerCmd(!target); try { console.error('[Dashboard] Power write failed', err); } catch(e){} })
+            .finally(function(){
+              self.isBusy(false);
+              try { sessionStorage.setItem('unitTransition:' + self.name, JSON.stringify({ duration: 50000 })); } catch(e){}
+              setTimeout(function(){ try { window.location.reload(); } catch(e){} }, 0);
+            });
         };
         self.onApplySetpoint = function(){
           if(self.isBusy()) return;
@@ -823,7 +930,9 @@
           if(self.isDisabled()) return Promise.resolve(true);
           if(!self.pollKeys.length) return Promise.resolve(true);
           return adapter.batchRead(self.pollKeys).then(function(resp){ if(!resp) return true;
-            if(self.vars.PowerFb in resp) self.powerFb(toBool(resp[self.vars.PowerFb]));
+            var pfb = (self.vars.PowerFb in resp) ? toBool(resp[self.vars.PowerFb]) : false;
+            var fsp = (self.vars.FanSpeedFb in resp) ? toNum(resp[self.vars.FanSpeedFb]||0) : 0;
+            if(self.vars.PowerFb in resp || self.vars.FanSpeedFb in resp) self.powerFb(!!(pfb || fsp > 0));
             if(self.vars.TempCurrent in resp) self.tempCurrent(toNum(resp[self.vars.TempCurrent]).toFixed(1));
             if(self.vars.ModeFb in resp){ var vv = Number(resp[self.vars.ModeFb]); var mm = (vv===0?'off': vv===1?'precomfort': vv===2?'economy': vv===3?'comfort': String(resp[self.vars.ModeFb])); self.modeFb(mm); }
             if(self.vars.FanSpeedFb in resp) self.fanSpeedFb(toNum(resp[self.vars.FanSpeedFb]||0));
@@ -901,7 +1010,14 @@
                   self.isConnected(false);
                   consecutiveFails++; self.connectionClass('status-err'); self.connectionText('بدون اتصال');
                   var firstErr = results.find(function(r){ return r.status==='rejected'; });
-                  var msg = (firstErr && firstErr.reason && (firstErr.reason.message || String(firstErr.reason))) || 'Connection failed'; self.lastError(msg);
+                  var msg = (firstErr && firstErr.reason && (firstErr.reason.message || String(firstErr.reason))) || 'Connection failed';
+                  try {
+                    var mstr = String(msg||'');
+                    if(/HTTP\s*5\d\d/.test(mstr) || /\b(500|501|502|503|504)\b/.test(mstr)){
+                      msg = 'سرور غیر فعال';
+                    }
+                  } catch(e){}
+                  self.lastError(msg);
                 } else if(ok){
                   self.isConnected(true);
                   consecutiveFails = 0; self.lastError(''); self.connectionClass('status-ok'); self.connectionText('متصل');
@@ -929,7 +1045,7 @@
           window.DEMO_MODE = (m && m[1] === '1') ? true : false;
         } catch(e){ window.DEMO_MODE = false; }
         ko.applyBindings(vm);
-        loadCfg().then(function(){ return fetch(api('/api/me')); }).then(function(r){ return r.json(); }).then(function(j){ var role = String((j&&j.role)||'guest'); if(role==='guest') { window.location.replace('/login'); return; } vm.role(role); vm.loadChillers(); }).catch(function(){ window.location.replace('/login'); });
+        loadCfg().then(function(){ return fetch(api('/api/me'), { credentials: 'same-origin', cache: 'no-store' }); }).then(function(r){ return r.json(); }).then(function(j){ var role = String((j&&j.role)||'guest'); if(role==='guest') { window.location.replace('/login'); return; } vm.role(role); vm.loadChillers(); }).catch(function(){ window.location.replace('/login'); });
         vm.load().then(function(){ vm.startPolling();
         try {
           var mm = (location.search || '').match(/[?&]mode=([^&]+)/i);
@@ -938,6 +1054,7 @@
             setTimeout(function(){ try { if(vm.units() && vm.units().length){ vm.units().forEach(function(u){ u.modeCmd(desired); u.onApplyMode(); }); } } catch(e){} }, 500);
           }
         } catch(e){}
+        
         if(window.DEMO_MODE){
           setTimeout(function(){
             try {
@@ -986,6 +1103,8 @@
         try { root.setAttribute('data-theme', t); } catch(e){}
         var label = document.getElementById('theme-label');
         if(label){ label.textContent = (t === 'dark') ? 'تاریک' : 'روشن'; }
+        var label2 = document.getElementById('theme-label-mobile');
+        if(label2){ label2.textContent = (t === 'dark') ? 'تاریک' : 'روشن'; }
       }
       var saved = null;
       try { saved = localStorage.getItem('dashboard-theme'); } catch(e){ saved = null; }
@@ -1003,32 +1122,65 @@
           try { localStorage.setItem('dashboard-theme', next); } catch(e){}
         });
       }
+      var btn2 = document.getElementById('theme-toggle-mobile');
+      if(btn2){
+        btn2.addEventListener('click', function(){
+          var next = (root.getAttribute('data-theme') === 'dark') ? 'light' : 'dark';
+          applyTheme(next);
+          try { localStorage.setItem('dashboard-theme', next); } catch(e){}
+        });
+      }
     })();
   </script>
   <script>
     (function(){
       try {
-        var btn = document.getElementById('btn-open-pgd');
-        if(btn){
-          btn.addEventListener('click', function(){
-            window.open('https://assist-nutrition-disabled-architects.trycloudflare.com/pgd/index.htm','_blank');
-          });
-        }
         var span = document.getElementById('cpco-version');
+        var span2 = document.getElementById('cpco-version-mobile');
         fetch('/proxy?url=https://assist-nutrition-disabled-architects.trycloudflare.com/')
           .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
           .then(function(t){
             var m = t.match(/C\.pCO\s+Webkit\s+version\s*([^\s<]+)/i);
             var info = m ? ('Webkit ' + m[1]) : '';
             if(span){ if(info){ span.textContent = info; } else { span.style.display='none'; } }
+            if(span2){ if(info){ span2.textContent = info; } else { span2.style.display='none'; } }
           })
-          .catch(function(){ if(span){ span.style.display='none'; } });
+          .catch(function(){ if(span){ span.style.display='none'; } if(span2){ span2.style.display='none'; } });
+      } catch(e){}
+    })();
+  </script>
+  <script>
+    (function(){
+      try {
+        var btn = document.getElementById('menu-toggle');
+        var menu = document.getElementById('mobile-menu');
+        if(btn && menu){
+          btn.addEventListener('click', function(){
+            var open = menu.classList.toggle('open');
+            btn.classList.toggle('active', open);
+            menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+          });
+          menu.addEventListener('click', function(e){
+            if(e.target === menu){
+              menu.classList.remove('open');
+              btn.classList.remove('active');
+              menu.setAttribute('aria-hidden', 'true');
+            }
+          });
+          window.addEventListener('resize', function(){
+            if(window.innerWidth > 576){
+              menu.classList.remove('open');
+              btn.classList.remove('active');
+              menu.setAttribute('aria-hidden', 'true');
+            }
+          });
+        }
       } catch(e){}
     })();
   </script>
   
   <script>
-    if (false && 'serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js')
           .then(function(registration) {

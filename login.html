@@ -159,6 +159,17 @@
       margin-bottom: 12px;
       letter-spacing: -0.5px;
       color: var(--fg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-logo {
+      max-width: 180px;
+      max-height: 64px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
     }
 
     .subtitle {
@@ -317,6 +328,21 @@
       letter-spacing: 0.3px;
     }
 
+    .brand-logo--card {
+      position: static;
+      left: auto;
+      bottom: auto;
+      margin: 0 auto 12px;
+    }
+
+    .brand .brand-logo {
+      justify-content: center;
+    }
+
+    .brand-logo--card img {
+      height: 32px;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .wrap {
@@ -336,6 +362,13 @@
       .brand {
         font-size: 22px;
       }
+      .card-logo {
+        max-width: 160px;
+        max-height: 58px;
+      }
+      .brand-logo--card img {
+        height: 30px;
+      }
     }
 
     @media (max-width: 480px) {
@@ -351,6 +384,17 @@
 
       .brand {
         font-size: 20px;
+      }
+      .card-logo {
+        max-width: 140px;
+        max-height: 52px;
+      }
+
+      .brand-logo--card {
+        padding: 10px 12px;
+      }
+      .brand-logo--card img {
+        height: 26px;
       }
 
       .brand-logo {
@@ -428,7 +472,12 @@
 
   <div class="wrap">
     <div class="card">
-      <div class="brand">سیستم سرمایشی</div>
+      <div class="brand">
+        <a class="brand-logo brand-logo--card" href="https://fanap.ir" target="_blank" rel="noopener" aria-label="Fanap Tech">
+          <img src="/fanap.png" alt="Fanap Tech" />
+          <span class="txt">Fanap Tech</span>
+        </a>
+      </div>
       <!-- <p class="subtitle">برای دسترسی به سامانه لطفاً وارد شوید.</p> -->
 
       <div class="form-group">
@@ -449,11 +498,7 @@
     </div>
   </div>
 
-  <!-- Fanap logo -->
-  <a class="brand-logo" href="https://fanap.ir" target="_blank" rel="noopener" aria-label="Fanap Tech">
-    <img src="/fanap.png" alt="Fanap Tech" />
-    <span class="txt">Fanap Tech</span>
-  </a>
+  
 
   <script>
     (function(){
@@ -493,7 +538,7 @@
 
       function checkAuth(){
         return loadCfg()
-          .then(function(){ return fetch(api('/api/me')); })
+          .then(function(){ return fetch(api('/api/me'), { credentials: 'same-origin', cache: 'no-store' }); })
           .then(function(r){ return r.json(); })
           .then(function(info){
             var role = (info && info.role) || 'guest';
