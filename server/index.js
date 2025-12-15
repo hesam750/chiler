@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const proxy = require('./proxy');
+const net = require('net');
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
@@ -39,7 +40,9 @@ function safeWriteJSON(filePath, obj) {
 
 function ensureConfigStructure() {
   const cfg = safeReadJSON(dataFile);
+  if (!cfg.units || !Array.isArray(cfg.units)) cfg.units = [];
   if (!cfg.chillers || !Array.isArray(cfg.chillers)) cfg.chillers = [];
+  if (!cfg.generators || !Array.isArray(cfg.generators)) cfg.generators = [];
   if (cfg.chillers.length) {
     cfg.chillers = cfg.chillers.map((c) => ({
       id: c.id || crypto.randomBytes(8).toString('hex'),
@@ -225,3 +228,144 @@ app.use(express.static(publicDir));
 
 const port = process.env.PORT || 8000;
 app.listen(port);
+// (ensureConfigStructure defined earlier)
+
+// Generators CRUD (similar to chillers)
+// function genId() {
+//   try { return crypto.randomBytes(8).toString('hex'); } catch(_) { return String(Date.now()); }
+// }
+// app.get('/api/generators', (req, res) => {
+//   const cfg = ensureConfigStructure();
+//   res.json({ items: cfg.generators });
+// });
+// app.post('/api/generators', requireAdmin, (req, res) => {
+//   const { name, ip, active } = req.body || {};
+//   const cfg = ensureConfigStructure();
+//   const item = { id: genId(), name: String(name || 'ژنراتور'), ip: String(ip || ''), active: !!active };
+//   cfg.generators.push(item);
+//   safeWriteJSON(dataFile, cfg);
+//   res.json({ ok: true, item });
+// });
+// app.put('/api/generators/:id', requireAdmin, (req, res) => {
+//   const { id } = req.params;
+//   const { name, ip, active } = req.body || {};
+//   const cfg = ensureConfigStructure();
+//   const idx = cfg.generators.findIndex((c) => c.id === id);
+//   if (idx === -1) return res.status(404).json({ error: 'not_found' });
+//   const prev = cfg.generators[idx];
+//   cfg.generators[idx] = {
+//     id: prev.id,
+//     name: name != null ? String(name) : prev.name,
+//     ip: ip != null ? String(ip) : prev.ip,
+//     active: active != null ? !!active : prev.active,
+//   };
+//   safeWriteJSON(dataFile, cfg);
+//   res.json({ ok: true, item: cfg.generators[idx] });
+// });
+// app.delete('/api/generators/:id', requireAdmin, (req, res) => {
+//   const { id } = req.params;
+//   const cfg = ensureConfigStructure();
+//   const idx = cfg.generators.findIndex((c) => c.id === id);
+//   if (idx === -1) return res.status(404).json({ error: 'not_found' });
+//   const removed = cfg.generators.splice(idx, 1)[0];
+//   safeWriteJSON(dataFile, cfg);
+//   res.json({ ok: true, item: removed });
+// });
+
+// // Minimal Modbus TCP client for DSE8610 MKII
+// function modbusReadHolding(ip, unitId, startAddr, qty) {
+//   return new Promise((resolve, reject) => {
+//     try {
+//       const socket = new net.Socket();
+//       const tid = Math.floor(Math.random() * 0xffff);
+//       const buf = Buffer.alloc(12);
+//       buf.writeUInt16BE(tid, 0); // Transaction ID
+//       buf.writeUInt16BE(0, 2);   // Protocol ID
+//       buf.writeUInt16BE(6, 4);   // Length
+//       buf.writeUInt8(unitId || 1, 6); // Unit ID
+//       buf.writeUInt8(3, 7);      // Function 3
+//       buf.writeUInt16BE(startAddr, 8);
+//       buf.writeUInt16BE(qty, 10);
+//       let result = null; let done = false;
+//       socket.setTimeout(5000);
+//       socket.on('timeout', () => { if (!done) { done = true; try{ socket.destroy(); }catch(_){} reject(new Error('timeout')); } });
+//       socket.on('error', (e) => { if (!done) { done = true; try{ socket.destroy(); }catch(_){} reject(e); } });
+//       socket.connect(502, ip, () => socket.write(buf));
+//       socket.on('data', (data) => {
+//         try {
+//           if (data.length < 9) return;
+//           const fc = data.readUInt8(7);
+//           if (fc !== 3) return;
+//           const byteCount = data.readUInt8(8);
+//           if (data.length < 9 + byteCount) return;
+//           const regs = [];
+//           for (let i = 0; i < byteCount / 2; i++) {
+//             regs.push(data.readUInt16BE(9 + i * 2));
+//           }
+//           result = regs;
+//           if (!done) { done = true; try{ socket.end(); }catch(_){} resolve(result); }
+//         } catch (e) { if (!done) { done = true; try{ socket.destroy(); }catch(_){} reject(e); } }
+//       });
+//     } catch (e) { reject(e); }
+//   });
+// }
+// function modbusWriteSingle(ip, unitId, addr, val) {
+//   return new Promise((resolve, reject) => {
+//     try {
+//       const socket = new net.Socket();
+//       const tid = Math.floor(Math.random() * 0xffff);
+//       const buf = Buffer.alloc(12);
+//       buf.writeUInt16BE(tid, 0);
+//       buf.writeUInt16BE(0, 2);
+//       buf.writeUInt16BE(6, 4);
+//       buf.writeUInt8(unitId || 1, 6);
+//       buf.writeUInt8(6, 7); // Function 6
+//       buf.writeUInt16BE(addr, 8);
+//       buf.writeUInt16BE(val, 10);
+//       let done = false;
+//       socket.setTimeout(5000);
+//       socket.on('timeout', () => { if (!done) { done = true; try{ socket.destroy(); }catch(_){} reject(new Error('timeout')); } });
+//       socket.on('error', (e) => { if (!done) { done = true; try{ socket.destroy(); }catch(_){} reject(e); } });
+//       socket.connect(502, ip, () => socket.write(buf));
+//       socket.on('data', () => { if (!done) { done = true; try{ socket.end(); }catch(_){} resolve(true); } });
+//     } catch (e) { reject(e); }
+//   });
+// }
+
+// function parseAddr(s) {
+//   const n = Number(String(s||'').trim());
+//   if (isNaN(n)) return null;
+//   // If provided like 40001, convert to 0-based
+//   return n >= 40001 ? (n - 40001) : n;
+// }
+
+// app.get('/api/dse8610/regs', (req, res) => {
+//   const ip = String(req.query.ip||'').trim();
+//   const addrs = String(req.query.addrs||'').split(',').map(parseAddr).filter((v) => v != null);
+//   if (!ip || !addrs.length) return res.status(400).json({ error: 'bad_request' });
+//   // Read in batches of up to 10
+//   const unitId = Number(req.query.uid||1) || 1;
+//   const promises = addrs.map((addr) => modbusReadHolding(ip, unitId, addr, 1).then((regs) => ({ addr, val: regs && regs[0] })));
+//   Promise.allSettled(promises).then((results) => {
+//     const out = {};
+//     results.forEach((r, i) => { const a = addrs[i]; out[a] = (r.status === 'fulfilled') ? r.value.val : null; });
+//     res.json({ ok: true, values: out });
+//   }).catch((e) => res.status(500).json({ error: String(e||'read_error') }));
+// });
+// app.get('/api/dse8610/reg', (req, res) => {
+//   const ip = String(req.query.ip||'').trim();
+//   const addr = parseAddr(req.query.addr);
+//   if (!ip || addr == null) return res.status(400).json({ error: 'bad_request' });
+//   modbusReadHolding(ip, Number(req.query.uid||1)||1, addr, 1).then((regs) => {
+//     res.json({ ok: true, value: regs && regs[0] });
+//   }).catch((e) => res.status(500).json({ error: String(e||'read_error') }));
+// });
+// app.post('/api/dse8610/write', (req, res) => {
+//   const ip = String(req.body && req.body.ip || '').trim();
+//   const addr = parseAddr(req.body && req.body.addr);
+//   const val = Number(req.body && req.body.val);
+//   if (!ip || addr == null || isNaN(val)) return res.status(400).json({ error: 'bad_request' });
+//   modbusWriteSingle(ip, Number(req.body && req.body.uid || 1)||1, addr, val).then(() => {
+//     res.json({ ok: true });
+//   }).catch((e) => res.status(500).json({ error: String(e||'write_error') }));
+// });

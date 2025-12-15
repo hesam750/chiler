@@ -129,21 +129,26 @@
     .fan::after { content:""; position:absolute; inset: 6px; border-radius:50%; pointer-events:none; opacity:.35; background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.08) 0 8deg, transparent 8deg 22deg); -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0 34%, black 34% 100%); mask-image: radial-gradient(circle at 50% 50%, transparent 0 34%, black 34% 100%); }
     @keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
     @media (prefers-reduced-motion: reduce) { .fan .blade { animation: none !important; } }
-  
+
     .controls { display:grid; grid-template-columns: 1fr; gap:10px; }
     .control { background: var(--panel-bg); border:1px solid var(--panel-border); border-radius:10px; padding:10px; }
     .control h6 { margin:0 0 8px; color: var(--heading); font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
   
     .toggle { display:flex; align-items:center; gap:10px; }
     .toggle input { width:44px; height:22px; }
-  
+
     .setpoint { display:flex; align-items:center; gap:8px; }
     .setpoint input[type=range] { flex:1; }
+    .power-loader { display:flex; align-items:center; justify-content:center; flex-direction: column; gap:10px; padding:16px; }
+    .power-loader .circle { position:relative; width:96px; height:96px; border-radius:50%; background: radial-gradient(60% 60% at 50% 50%, #0c121a, #09111a 60%, #071018 100%); border:1px solid var(--panel-border); box-shadow: inset 0 0 12px rgba(0,0,0,.6), 0 8px 18px rgba(0,0,0,.4); }
+    .power-loader .num { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; color:#cde9ff; text-shadow:0 0 12px rgba(52,152,219,.25); }
+    .power-loader .hint { font-size:12px; color:#8b949e; }
     .value-big { font-size:28px; font-weight:600; min-width:72px; text-align:right; }
-    .progress-wrap { display:flex; align-items:center; justify-content:center; margin-bottom: 8px; }
+    .progress-wrap { display:flex; align-items:center; justify-content:center; margin-bottom: 8px; position: relative; }
     .progress-ring { width:42px; height:42px; }
     .progress-ring__bg { fill:none; stroke: var(--panel-border); stroke-width:4; opacity:.35; }
     .progress-ring__prog { fill:none; stroke: var(--accent); stroke-width:4; stroke-linecap:round; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset .2s linear; filter: drop-shadow(0 0 6px rgba(0,0,0,.25)); }
+    .progress-num { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#cde9ff; }
   
     .btn-step { width:28px; height:28px; border-radius:8px; border:1px solid #2b3647; background:#0f1722; color:#cde9ff; line-height:26px; text-align:center; padding:0; font-weight:600; }
     .btn-step:hover { background:#132033; }
@@ -151,7 +156,14 @@
     .btn-step.minus { box-shadow: inset 0 0 8px rgba(231,76,60,.25); }
   
     .footer { padding:10px 16px; color:#8b949e; font-size:12px; border-top:1px solid #243040; }
-  
+    .toast-container { position: fixed; right: 12px; bottom: 12px; z-index: 1200; display:flex; flex-direction: column; gap:8px; pointer-events: none; }
+    .toast { pointer-events:auto; min-width: 220px; max-width: 86vw; background: var(--card-bg); border:1px solid var(--panel-border); color:#e6edf3; padding:10px 12px; border-radius:12px; box-shadow:0 8px 22px rgba(0,0,0,.45); opacity:0; transform: translateY(6px); transition: opacity .2s ease, transform .2s ease; font-size:13px; }
+    .toast.show { opacity:1; transform: translateY(0); }
+    .toast.hide { opacity:0; transform: translateY(8px); }
+    .toast-success { border-color: rgba(46,204,113,.35); background: rgba(46,204,113,.12); color:#2ecc71; }
+    .toast-error { border-color: rgba(231,76,60,.35); background: rgba(231,76,60,.12); color:#e74c3c; }
+    .toast-info { border-color: rgba(52,152,219,.35); background: rgba(52,152,219,.12); color:#3498db; }
+
     @media (max-width: 768px) {
       .cards { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
       .controls { grid-template-columns: 1fr 1fr; }
@@ -347,7 +359,11 @@
         </div>
         <div class="controls">
           <div class="control">
-            <div class="muted">IP: <strong data-bind="text: ip"></strong></div>
+            <div class="status-chip" data-bind="css: powerFb() ? 'status-ok' : 'status-err'">
+              <span data-bind="text: powerFb() ? 'روشن' : 'خاموش'"></span>
+              <span data-bind="text: powerHMS"></span>
+              <span data-bind="text: powerDaysLabel"></span>
+            </div>
           </div>
           <div class="control">
             <div class="progress-wrap" data-bind="visible: transitionVisible">
@@ -355,8 +371,9 @@
                 <circle class="progress-ring__bg" cx="21" cy="21" r="16"></circle>
                 <circle class="progress-ring__prog" cx="21" cy="21" r="16" data-bind="attr: { 'stroke-dasharray': transitionCircumference, 'stroke-dashoffset': transitionStrokeOffset }"></circle>
               </svg>
+              <div class="progress-num" data-bind="text: progressDisplay"></div>
             </div>
-            <div class="toggle toggle--power">
+            <div class="toggle toggle--power" data-bind="visible: !transitionVisible()">
               <label class="switch power-switch">
                 <span class="toggle-label off">خاموش</span>
                 <input class="form-check-input" type="checkbox" data-bind="checked: powerCmd, enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), click: onTogglePower" id="powerSwitch_1">
@@ -374,7 +391,7 @@
               <button class="btn-step plus" data-bind="enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy(), attr: { title: '+' + spStep }, click: function(){ var v = parseFloat(setpointCmd()); if(isNaN(v)) v = spMin; var s = +spStep; setpointCmd(Math.min(spMax, Math.max(spMin, +(v + s).toFixed(1)))); }">+</button>
               <span class="value-big" data-bind="text: Number(setpointCmd()).toFixed(1)"></span>
             </div>
-            <div class="muted" style="margin-top:6px; font-size:12px; text-align:center;">دمای تنظیم شده:&nbsp;<strong data-bind="text: (setpointFb()==null? '-' : Number(setpointFb()).toFixed(1))"></strong>&nbsp;°C</div>
+            <div class="muted" style="margin-top:6px; font-size:12px; text-align:center;">دمای کامفورت ثبت‌شده:&nbsp;<strong data-bind="text: (setpointFb()==null? '-' : Number(setpointFb()).toFixed(1))"></strong>&nbsp;°C</div>
             <button type="button" class="btn btn-primary btn-sm" data-bind="click: onApplySetpoint, enable: !isDisabled() && $root.canWriteUnit(name) && !isBusy()">اعمال</button>
           </div>
 
@@ -674,18 +691,116 @@
       function UnitVM(cfg, adapter, root){
         var self = this; cfg = cfg||{}; self.name = cfg.name || 'Unit'; self.vars = cfg.vars || {}; self.root = root || null; self.isDisabled = ko.observable(!!cfg.disabled);
         self.ip = ko.observable(cfg.ip || '');
-        self.powerFb = ko.observable(false); self.tempCurrent = ko.observable(0).extend({ rateLimit: 250 }); self.modeFb = ko.observable('auto'); self.fanSpeedFb = ko.observable(0).extend({ rateLimit: 250 }); self.alarmActive = ko.observable(false);
+        self.powerFb = ko.observable(false); self.tempCurrent = ko.observable(0).extend({ rateLimit: 250 }); self.tempReturn = ko.observable(null).extend({ rateLimit: 250 }); self.modeFb = ko.observable('auto'); self.fanSpeedFb = ko.observable(0).extend({ rateLimit: 250 }); self.alarmActive = ko.observable(false);
 
         self.isBusy = ko.observable(false);
         self.powerCmd = ko.observable(false);
         self.powerFb.subscribe(function(v){ if(!self.isBusy()) self.powerCmd(!!v); });
+        self.powerFb.subscribe(function(v){
+          var now = Date.now();
+          if(self._lastPower === null){
+            self._lastPower = !!v;
+            try {
+              var key = (!!v ? ('powerSinceOn:' + self.name) : ('powerSinceOff:' + self.name));
+              var prev = localStorage.getItem(key);
+              self.powerSince(prev ? (Number(prev) || now) : now);
+            } catch(e){ self.powerSince(now); }
+            return;
+          }
+          if(!!v !== self._lastPower){
+            self._lastPower = !!v;
+            self.powerSince(now);
+            try { localStorage.setItem((!!v ? ('powerSinceOn:' + self.name) : ('powerSinceOff:' + self.name)), String(now)); } catch(e){}
+          }
+        });
         self.setpointCmd = ko.observable(20);
+        self._lastCmdAt = 0;
+        self.setpointCmd.subscribe(function(){ self._lastCmdAt = Date.now(); });
         var spCfg = cfg.setpoint || {};
         self.spMin = (spCfg.min != null ? spCfg.min : 0);
         self.spMax = (spCfg.max != null ? spCfg.max : 50);
         self.spStep = (spCfg.step != null ? spCfg.step : 0.1);
         self.setpointFb = ko.observable(null);
         self.modeCmd = ko.observable('auto');
+        self._powerToastTimer = null;
+        self.powerSince = ko.observable(Date.now());
+        self._lastPower = null;
+        self.powerDurationLabel = ko.pureComputed(function(){
+          var since = Number(self.powerSince() || Date.now());
+          var now = (self.root && self.root.clock) ? Number(self.root.clock()) : Date.now();
+          var ms = Math.max(0, now - since);
+          var d = Math.floor(ms / 86400000);
+          var h = Math.floor((ms % 86400000) / 3600000);
+          var m = Math.floor((ms % 3600000) / 60000);
+          var s = Math.floor((ms % 60000) / 1000);
+          var hh = ('0' + h).slice(-2);
+          var mm = ('0' + m).slice(-2);
+          var ss = ('0' + s).slice(-2);
+          var parts = [];
+          if(d > 0) parts.push(d + ' روز');
+          parts.push(hh + ':' + mm + ':' + ss);
+          return parts.join(' ');
+        });
+        self.powerDurationFullLabel = ko.pureComputed(function(){
+          var since = Number(self.powerSince() || Date.now());
+          var now = (self.root && self.root.clock) ? Number(self.root.clock()) : Date.now();
+          var ms = Math.max(0, now - since);
+          var d = Math.floor(ms / 86400000);
+          var h = Math.floor((ms % 86400000) / 3600000);
+          var m = Math.floor((ms % 3600000) / 60000);
+          var s = Math.floor((ms % 60000) / 1000);
+          var hh = ('0' + h).slice(-2);
+          var mm = ('0' + m).slice(-2);
+          var ss = ('0' + s).slice(-2);
+          return d + ' روز ' + hh + ' ساعت ' + mm + ' دقیقه ' + ss + ' ثانیه';
+        });
+        self.powerHMS = ko.pureComputed(function(){
+          var since = Number(self.powerSince() || Date.now());
+          var now = (self.root && self.root.clock) ? Number(self.root.clock()) : Date.now();
+          var ms = Math.max(0, now - since);
+          var h = Math.floor((ms % 86400000) / 3600000);
+          var m = Math.floor((ms % 3600000) / 60000);
+          var s = Math.floor((ms % 60000) / 1000);
+          var hh = ('0' + h).slice(-2);
+          var mm = ('0' + m).slice(-2);
+          var ss = ('0' + s).slice(-2);
+          return hh + '/' + mm + '/' + ss;
+        });
+        self.powerDaysLabel = ko.pureComputed(function(){
+          var since = Number(self.powerSince() || Date.now());
+          var now = (self.root && self.root.clock) ? Number(self.root.clock()) : Date.now();
+          var ms = Math.max(0, now - since);
+          var d = Math.floor(ms / 86400000);
+          var dd = ('0' + d).slice(-2);
+          return 'روز' + dd;
+        });
+        function humanDuration(ms){
+          ms = Math.max(0, Number(ms)||0);
+          var d = Math.floor(ms / 86400000);
+          var h = Math.floor((ms % 86400000) / 3600000);
+          var m = Math.floor((ms % 3600000) / 60000);
+          var s = Math.floor((ms % 60000) / 1000);
+          var parts = [];
+          if(d) parts.push(d + ' روز');
+          if(h) parts.push(h + ' ساعت');
+          if(!parts.length && m) parts.push(m + ' دقیقه'); else if(parts.length<2 && m) parts.push(m + ' دقیقه');
+          if(!parts.length && s) parts.push(s + ' ثانیه');
+          return parts.slice(0,2).join(' و ');
+        }
+        self.powerHumanLabel = ko.pureComputed(function(){
+          var since = Number(self.powerSince() || Date.now());
+          var now = (self.root && self.root.clock) ? Number(self.root.clock()) : Date.now();
+          var ms = Math.max(0, now - since);
+          return humanDuration(ms);
+        });
+        self.powerChipTitle = ko.pureComputed(function(){ return (self.powerFb() ? 'مدت روشن' : 'مدت خاموش'); });
+        self.powerSinceCalendar = ko.pureComputed(function(){ try { if(window.moment && moment.locale){ var s = Number(self.powerSince()||Date.now()); return 'شروع: ' + moment(s).calendar(); } } catch(e){} return ''; });
+        self.tempCurrentCandidates = (function(){
+          var c = [];
+          if(self.vars.TempCurrent) c.push(self.vars.TempCurrent);
+          c.push('CurrRoomTemp_Val','RoomTempAct_Val','RoomTemp.ReadVal','SupplyTemp.ReadVal','ReturnTemp.ReadVal');
+          return c.filter(function(v,i,a){ return v && a.indexOf(v)===i; });
+        })();
 
         function toBool(v){
           if(v == null) return false;
@@ -737,33 +852,48 @@
           var off = c * (1 - p / 100);
           return off.toFixed(2);
         });
+        self.progressDisplay = ko.pureComputed(function(){
+          var p = Math.max(0, Math.min(100, Number(self.transitionProgress() || 0)));
+          var v = Math.round(p * 0.59);
+          if(v < 1 && self.transitionVisible()) v = 1;
+          if(v > 59) v = 59;
+          return v;
+        });
         self._transitionTimer = null;
-        self.startTransition = function(ms){
+        self.startTransition = function(ms, reload){
           if(self._transitionTimer){ try{ clearInterval(self._transitionTimer); }catch(e){} self._transitionTimer = null; }
-          var dur = Number(ms)||40000; var start = Date.now();
+          var dur = Number(ms)||59000; var start = Date.now();
+          self._transitionReloadOnEnd = !!reload;
           self.transitionVisible(true); self.transitionProgress(0);
           self._transitionTimer = setInterval(function(){
             var now = Date.now(); var ratio = Math.min(1, (now - start) / dur);
             self.transitionProgress(ratio * 100);
-            if(ratio >= 1){ try{ clearInterval(self._transitionTimer); }catch(e){} self._transitionTimer = null; self.transitionVisible(false); }
+            if(ratio >= 1){ try{ clearInterval(self._transitionTimer); }catch(e){} self._transitionTimer = null; self.transitionVisible(false); try { if(self._transitionReloadOnEnd) { self._transitionReloadOnEnd = false; window.location.reload(); } } catch(e){} }
           }, 200);
         };
         self.stopTransition = function(){ if(self._transitionTimer){ try{ clearInterval(self._transitionTimer); }catch(e){} self._transitionTimer = null; } self.transitionVisible(false); };
-        try {
-          var _pending = sessionStorage.getItem('unitTransition:' + self.name);
-          if(_pending){
-            var cfg = null; try { cfg = JSON.parse(_pending); } catch(e){}
-            var dur = Number(cfg && cfg.duration || 50000);
-            self.startTransition(dur);
-            try { sessionStorage.removeItem('unitTransition:' + self.name); } catch(e){}
-          }
-        } catch(e){}
+        self.powerLoadingVisible = ko.observable(false);
+        self.powerLoadingCount = ko.observable(0);
+        self._powerLoadingTimer = null;
+        self.startPowerLoading = function(ms){
+          var dur = Number(ms)||50000; var step = Math.max(200, Math.floor(dur / 50)); var cnt = 0;
+          if(self._powerLoadingTimer){ try{ clearInterval(self._powerLoadingTimer); }catch(e){} self._powerLoadingTimer = null; }
+          self.powerLoadingVisible(true); self.powerLoadingCount(0);
+          self._powerLoadingTimer = setInterval(function(){ cnt++; self.powerLoadingCount(cnt); if(cnt >= 50){ try{ clearInterval(self._powerLoadingTimer); }catch(e){} self._powerLoadingTimer = null; self.powerLoadingVisible(false); self.isBusy(false); } }, step);
+        };
+        
 
         self.onTogglePower = function(_, ev){
           if(self.isBusy()) return;
           var target = (ev && ev.target) ? !!ev.target.checked : !self.powerCmd();
           var varName = self.vars.PowerCmd;
           if(!varName){ try{ console.warn('[Dashboard] PowerCmd var not configured'); }catch(e){} return; }
+          if(self.root && !self.root.isConnected() && !(window.DEMO_MODE === true)){
+            if(ev && ev.preventDefault) try{ ev.preventDefault(); }catch(e){}
+            self.powerCmd(self.powerFb());
+            try { if(window.showToast) window.showToast('برق دستگاه خاموش است یا اتصال برقرار نیست', 'error', 4000); } catch(e){}
+            return;
+          }
           self.powerCmd(target);
           self.isBusy(true);
           var offlineDemo = (window.DEMO_MODE === true);
@@ -778,17 +908,17 @@
           function writeModeFallback(){ var mVar = self.vars.ModeCmd; if(!mVar) return Promise.resolve(false); var mv = target ? 3 : 0; return adapter.write(mVar, mv).then(function(){ return delay(600); }).then(function(){ return readBack(); }).then(function(v){ return v===target; }).catch(function(){ return false; }); }
           function tryUnlockThenWrite(){ var unlockVars = ['PwdUser','PwdService','PwdManuf']; var unlockCodes = ['1489','1234']; var seq = []; unlockVars.forEach(function(u){ unlockCodes.forEach(function(c){ seq.push([u,c]); }); }); var idx=0; function next(){ if(idx>=seq.length) return Promise.resolve(false); var p=seq[idx++]; return adapter.write(p[0], p[1]).catch(function(){}).then(function(){ return delay(600); }).then(function(){ return adapter.write(varName, target?1:0); }).then(function(){ return delay(600); }).then(function(){ return readBack(); }).then(function(v){ if(v===target){ return adapter.write(p[0],'0').catch(function(){}).then(function(){ return true; }); } return next(); }); } return next(); }
           if(offlineDemo && self.root && !self.root.isConnected()){ self.powerFb(!!target); self.isBusy(false); return; }
+          self.startTransition(59000, true);
           adapter.write(varName, target ? 1 : 0)
             .then(function(){ return delay(500); })
             .then(function(){ return readBack(); })
             .then(function(v){ if(v===target) return true; return writeModeFallback(); })
             .then(function(ok){ if(ok) return true; return tryUnlockThenWrite(); })
-            .then(function(ok){ if(ok){ self.powerFb(!!target); try { console.info('[Dashboard] Power applied', { name: varName, value: target }); } catch(e){} } else { self.powerCmd(!target); try { console.error('[Dashboard] Power apply failed after fallbacks'); } catch(e){} } })
+            .then(function(ok){ if(ok){ self.powerFb(!!target); self.powerCmd(!!target); try { console.info('[Dashboard] Power applied', { name: varName, value: target }); } catch(e){} if(target){ try{ if(self._powerToastTimer) clearTimeout(self._powerToastTimer); self._powerToastTimer = setTimeout(function(){ try{ if(window.showToast) window.showToast('دستگاه روشن شد', 'success', 4000); }catch(e){} }, 50000); }catch(e){} } } else { self.powerCmd(!target); try { console.error('[Dashboard] Power apply failed after fallbacks'); } catch(e){} } })
             .catch(function(err){ if(self.root && !self.root.isConnected()){ self.powerCmd(target); self.powerFb(!!target); return; } self.powerCmd(!target); try { console.error('[Dashboard] Power write failed', err); } catch(e){} })
             .finally(function(){
               self.isBusy(false);
-              try { sessionStorage.setItem('unitTransition:' + self.name, JSON.stringify({ duration: 50000 })); } catch(e){}
-              setTimeout(function(){ try { window.location.reload(); } catch(e){} }, 0);
+              self.powerCmd(!!self.powerFb());
             });
         };
         self.onApplySetpoint = function(){
@@ -823,9 +953,7 @@
           try {
             var useModeSpecific = /CurrRoomTempSetP/i.test(varName) || varName === 'CurrRoomTempSetP_Val';
             if(useModeSpecific){
-              var m = String(self.modeFb()||'comfort').toLowerCase();
-              var cap = (m==='economy'?'Economy': m==='precomfort'?'PreComfort': 'Comfort');
-              targetVars = [ 'UnitSetP.RoomTempSetP.' + cap ];
+              targetVars = [ 'UnitSetP.RoomTempSetP.Comfort', varName ].filter(Boolean);
             }
           } catch(e){}
           function delay(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
@@ -925,7 +1053,11 @@
             .finally(function(){ self.isBusy(false); });
         };
 
-        self.pollKeys = (function(){ var keys = [self.vars.PowerFb, self.vars.TempCurrent, self.vars.ModeFb, self.vars.FanSpeedFb, self.vars.AlarmActive, self.vars.TempSetpoint]; return keys.filter(Boolean); })();
+        self.pollKeys = (function(){ var keys = [self.vars.PowerFb];
+          (self.tempCurrentCandidates||[]).forEach(function(k){ keys.push(k); });
+          keys.push(self.vars.TempReturn, self.vars.ModeFb, self.vars.FanSpeedFb, self.vars.AlarmActive, self.vars.TempSetpoint, 'UnitSetP.RoomTempSetP.Comfort');
+          return keys.filter(Boolean);
+        })();
         self.poll = function(){
           if(self.isDisabled()) return Promise.resolve(true);
           if(!self.pollKeys.length) return Promise.resolve(true);
@@ -933,13 +1065,26 @@
             var pfb = (self.vars.PowerFb in resp) ? toBool(resp[self.vars.PowerFb]) : false;
             var fsp = (self.vars.FanSpeedFb in resp) ? toNum(resp[self.vars.FanSpeedFb]||0) : 0;
             if(self.vars.PowerFb in resp || self.vars.FanSpeedFb in resp) self.powerFb(!!(pfb || fsp > 0));
-            if(self.vars.TempCurrent in resp) self.tempCurrent(toNum(resp[self.vars.TempCurrent]).toFixed(1));
+            var tcRaw = null;
+            if(self.vars.TempCurrent in resp) tcRaw = resp[self.vars.TempCurrent];
+            if(tcRaw==null || String(tcRaw).trim()===''){
+              (self.tempCurrentCandidates||[]).some(function(k){ if(k in resp){ var v = resp[k]; if(v!=null && String(v).trim()!==''){ tcRaw = v; return true; } } return false; });
+            }
+            if(tcRaw!=null && String(tcRaw).trim()!=='') self.tempCurrent(toNum(tcRaw).toFixed(1));
+            if(self.vars.TempReturn in resp) self.tempReturn(toNum(resp[self.vars.TempReturn]).toFixed(1));
             if(self.vars.ModeFb in resp){ var vv = Number(resp[self.vars.ModeFb]); var mm = (vv===0?'off': vv===1?'precomfort': vv===2?'economy': vv===3?'comfort': String(resp[self.vars.ModeFb])); self.modeFb(mm); }
             if(self.vars.FanSpeedFb in resp) self.fanSpeedFb(toNum(resp[self.vars.FanSpeedFb]||0));
             if(self.vars.AlarmActive in resp) self.alarmActive(toBool(resp[self.vars.AlarmActive]));
-            if(self.vars.TempSetpoint in resp){
-              var sp = toNum(resp[self.vars.TempSetpoint]);
+            var sp = null;
+            if(self.vars.TempSetpoint in resp){ sp = toNum(resp[self.vars.TempSetpoint]); }
+            if('UnitSetP.RoomTempSetP.Comfort' in resp && (sp==null || isNaN(sp))) { sp = toNum(resp['UnitSetP.RoomTempSetP.Comfort']); }
+            if(sp!=null && !isNaN(sp)){
               self.setpointFb(sp);
+              var now = Date.now();
+              if(!self._lastCmdAt || (now - self._lastCmdAt) > 1500){
+                var adj = Math.max(self.spMin, Math.min(self.spMax, +Number(sp).toFixed(1)));
+                self.setpointCmd(adj);
+              }
             }
             return true;
           });
@@ -947,7 +1092,7 @@
       }
 
       function RootVM(){
-        var self = this; self.units = ko.observableArray([]); self.connectionClass = ko.observable('status-warn'); self.connectionText = ko.observable('در حال اتصال...'); self.pollingMs = 1000; self.lastError = ko.observable('');
+        var self = this; self.units = ko.observableArray([]); self.connectionClass = ko.observable('status-warn'); self.connectionText = ko.observable('در حال اتصال...'); self.pollingMs = 1000; self.lastError = ko.observable(''); self.clock = ko.observable(Date.now());
         self.maxSlots = 10;
         self.strictMode = ko.observable(true);
         self.requireConfirmPower = ko.observable(true);
@@ -1024,7 +1169,7 @@
                 } else { self.isConnected(false); consecutiveFails = 0; self.lastError(''); self.connectionClass('status-warn'); self.connectionText('ناقص'); }
                 if((Date.now() - self._chillersLast) > 10000){ self._chillersLast = Date.now(); self.loadChillers(); }
               }).finally(function(){
-                ticking = false; var delay = self.pollingMs * (consecutiveFails > 3 ? 2 : 1); timer = setTimeout(tick, delay);
+                ticking = false; var delay = self.pollingMs * (consecutiveFails > 3 ? 2 : 1); self.clock(Date.now()); timer = setTimeout(tick, delay);
               });
           }
           tick();
@@ -1040,6 +1185,7 @@
         function loadCfg(){ if(window.__cfg) return Promise.resolve(window.__cfg); return fetch('assets/data/dashboard.config.json').then(function(r){ return r.json(); }).then(function(j){ window.__cfg=j||{}; API_BASE=(j&&j.apiBaseUrl)||''; return window.__cfg; }).catch(function(){ window.__cfg={}; API_BASE=''; return window.__cfg; }); }
         function api(p){ return (API_BASE||'') + p; }
         var vm = new RootVM();
+        try { if(window.moment && moment.locale) moment.locale('fa'); } catch(e){}
         try {
           var m = (location.search || '').match(/[?&]demo=(\d+)/i);
           window.DEMO_MODE = (m && m[1] === '1') ? true : false;
@@ -1094,6 +1240,28 @@
           }
         } catch(_){ }
       }
+    })();
+  </script>
+  <script>
+    (function(){
+      function ensureContainer(){
+        var c = document.getElementById('toast-container');
+        if(!c){ c = document.createElement('div'); c.id='toast-container'; c.className='toast-container'; document.body.appendChild(c); }
+        return c;
+      }
+      window.showToast = function(msg, type, duration){
+        try {
+          var c = ensureContainer();
+          var el = document.createElement('div');
+          el.className = 'toast ' + (type ? ('toast-' + type) : 'toast-info');
+          el.textContent = String(msg||'');
+          c.appendChild(el);
+          // allow transition to apply
+          requestAnimationFrame(function(){ el.classList.add('show'); });
+          var d = Math.max(1000, Number(duration||3000));
+          setTimeout(function(){ el.classList.remove('show'); el.classList.add('hide'); setTimeout(function(){ try{ el.remove(); }catch(e){} }, 400); }, d);
+        } catch(e){}
+      };
     })();
   </script>
   <script>
